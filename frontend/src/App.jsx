@@ -19,7 +19,7 @@ export default function App() {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Topbar (visible on mobile) */}
           <div className="md:hidden flex items-center justify-between p-4 border-b bg-white shadow-sm">
-            <h1 className="text-xl font-semibold text-blue-600">Tennis</h1>
+            <h1 className="text-xl font-semibold text-blue-600">Challenge Tennis Academy</h1>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 rounded-md border text-blue-600"
