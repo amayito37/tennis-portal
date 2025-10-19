@@ -1,0 +1,42 @@
+# ========================================
+# 🧱 Root Git Ignore — Tennis Portal Project
+# ========================================
+
+# ---- General ----
+.DS_Store
+Thumbs.db
+*.env
+*.log
+__pycache__/
+*.pyc
+
+# ---- Python (Backend) ----
+backend/.venv/
+backend/__pycache__/
+backend/**/*.pyc
+backend/*.sqlite3
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.env
+backend/instance/
+*.db
+
+# ---- Node / React (Frontend) ----
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.DS_Store
+frontend/.cache/
+frontend/.vite/
+frontend/.eslintcache
+frontend/yarn-error.log
+
+# ---- Editor & IDE ----
+.vscode/
+.idea/
+*.swp
+
+# ---- System ----
+*.bak
+*.tmp
+*.old

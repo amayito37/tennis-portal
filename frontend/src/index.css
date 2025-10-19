@@ -58,6 +58,16 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+section h1 {
+  margin-bottom: 1.5rem; /* antes 1rem */
+}
+
+section .flex{
+  margin-bottom: 1rem;
+  gap: 0.5rem; /* 🔹 espacio horizontal entre input y botón */
+  margin-bottom: 1.5rem;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
