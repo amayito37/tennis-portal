@@ -1,0 +1,42 @@
+# Node
+node_modules/
+dist/
+.vite/
+.env
+*.env
+.env.*
+
+# Python / venv
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.db
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+env.bak/
+
+# IDE / OS junk
+.DS_Store
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+
+# Build artifacts
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+pip-wheel-metadata/
+build/
+develop-eggs/
+dist/
