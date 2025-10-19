@@ -1,27 +1,29 @@
 export default function RankingsTable({ players }) {
   return (
-    <table className="w-full border-collapse text-left">
-      <thead>
-        <tr>
-          <th className="text-sm text-gray-500 pb-2 border-b">Rank</th>
-          <th className="text-sm text-gray-500 pb-2 border-b">Player</th>
-          <th className="text-sm text-gray-500 pb-2 border-b">Matches</th>
-          <th className="text-sm text-gray-500 pb-2 border-b">Points</th>
-        </tr>
-      </thead>
-      <tbody>
-        {players.map(p => (
-          <tr
-            key={p.rank}
-            className="hover:bg-blue-50 transition-colors border-b text-gray-700"
-          >
-            <td className="py-2">{p.rank}</td>
-            <td>{p.name}</td>
-            <td>{p.matches}</td>
-            <td>{p.points}</td>
+    <div className="overflow-x-auto bg-white rounded-lg shadow-sm">
+      <table className="min-w-full text-left border-collapse">
+        <thead className="bg-gray-100 text-gray-600 text-sm uppercase">
+          <tr>
+            <th className="px-4 py-3">Rank</th>
+            <th className="px-4 py-3">Player</th>
+            <th className="px-4 py-3">Matches</th>
+            <th className="px-4 py-3">Points</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {players.map((p) => (
+            <tr
+              key={p.id}
+              className="border-t hover:bg-blue-50 transition"
+            >
+              <td className="px-4 py-2">{p.rank}</td>
+              <td className="px-4 py-2">{p.name}</td>
+              <td className="px-4 py-2">{p.matches}</td>
+              <td className="px-4 py-2 font-semibold text-blue-700">{p.points}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

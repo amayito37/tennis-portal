@@ -1,28 +1,61 @@
-import { Menu, Trophy, Calendar, Home } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { Menu, Users, Trophy, Calendar } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
-export default function Sidebar() {
-  const linkClass = ({ isActive }) =>
-    `flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors ${
-      isActive
-        ? 'bg-primary text-white'
-        : 'text-gray-700 hover:bg-blue-50 hover:text-primary'
-    }`;
-
+export default function Sidebar({ open, setOpen }) {
   return (
-    <aside className="w-64 h-screen border-r border-gray-200 bg-white p-6 flex flex-col">
-      <h1 className="text-2xl font-bold text-primary mb-8">Tennis</h1>
-      <nav className="flex flex-col gap-1">
-        <NavLink to="/" className={linkClass}>
-          <Home size={18} /> Dashboard
+    <aside
+      className={`fixed inset-y-0 left-0 transform bg-white shadow-md z-50 w-64 transition-transform duration-300 ease-in-out
+        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static md:shadow-none`}
+    >
+      <div className="p-5 flex items-center justify-between border-b md:justify-center">
+        <h2 className="text-2xl font-bold text-blue-600">Tennis</h2>
+        <button
+          onClick={() => setOpen(false)}
+          className="md:hidden text-gray-500 hover:text-gray-700"
+        >
+          ✕
+        </button>
+      </div>
+
+      <nav className="flex flex-col p-4 space-y-2">
+        <NavLink
+          to="/"
+          className={({ isActive }) =>
+            `flex items-center gap-3 p-2 rounded-md transition ${
+              isActive ? "bg-blue-100 text-blue-600 font-semibold" : "hover:bg-gray-100"
+            }`
+          }
+        >
+          <Menu size={18} /> Dashboard
         </NavLink>
-        <NavLink to="/matches" className={linkClass}>
-          <Menu size={18} /> Matches
+        <NavLink
+          to="/matches"
+          className={({ isActive }) =>
+            `flex items-center gap-3 p-2 rounded-md transition ${
+              isActive ? "bg-blue-100 text-blue-600 font-semibold" : "hover:bg-gray-100"
+            }`
+          }
+        >
+          <Trophy size={18} /> Matches
         </NavLink>
-        <NavLink to="/rankings" className={linkClass}>
-          <Trophy size={18} /> Rankings
+        <NavLink
+          to="/rankings"
+          className={({ isActive }) =>
+            `flex items-center gap-3 p-2 rounded-md transition ${
+              isActive ? "bg-blue-100 text-blue-600 font-semibold" : "hover:bg-gray-100"
+            }`
+          }
+        >
+          <Users size={18} /> Rankings
         </NavLink>
-        <NavLink to="/fixtures" className={linkClass}>
+        <NavLink
+          to="/fixtures"
+          className={({ isActive }) =>
+            `flex items-center gap-3 p-2 rounded-md transition ${
+              isActive ? "bg-blue-100 text-blue-600 font-semibold" : "hover:bg-gray-100"
+            }`
+          }
+        >
           <Calendar size={18} /> Fixtures
         </NavLink>
       </nav>
