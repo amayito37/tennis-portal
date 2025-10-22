@@ -61,4 +61,19 @@ def create_match(
     db: Session = Depends(get_db),
     _=Depends(get_current_user)
 ):
-    player1 = db.query(User).filte
+    player1 = db.query(User).filter(User.id == payload.player1_id).first()
+    player2 = db.query(User).filter(User.id == payload.player2_id).first()
+
+    if not player1 or not player2:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    match = Match(
+        player1_id=payload.player1_id,
+        player2_id=payload.player2_id,
+        scheduled_date=payload.scheduled_date,
+        status=MatchStatus.SCHEDULED,
+    )
+    db.add(match)
+    db.commit()
+    db.refresh(match)
+    return match
