@@ -1,22 +1,27 @@
-from pydantic import BaseModel, conint
-from typing import Literal
 from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, ConfigDict
+from app.schemas.user import UserPublic  # make sure this import works
 
-class MatchCreate(BaseModel):
-    player1_id: conint(gt=0)
-    player2_id: conint(gt=0)
-    score: str
-    winner_id: conint(gt=0)
-    date_played: datetime | None = None
+class MatchBase(BaseModel):
+    player1_id: int
+    player2_id: int
+    scheduled_date: Optional[datetime] = None
+    score: Optional[str] = None
+    winner_id: Optional[int] = None
+    played: bool = False
+
+class MatchCreate(MatchBase):
+    pass
 
 class MatchPublic(BaseModel):
     id: int
-    player1_id: int
-    player2_id: int
-    score: str
-    winner_id: int
-    status: Literal["pending", "approved", "rejected"]
-    date_played: datetime
+    player1: Optional[UserPublic] = None
+    player2: Optional[UserPublic] = None
+    winner: Optional[UserPublic] = None
+    score: Optional[str] = None
+    scheduled_date: Optional[datetime] = None
+    played: bool = False
+    status: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

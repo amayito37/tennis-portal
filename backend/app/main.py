@@ -35,5 +35,3 @@ app.include_router(api_router)
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
-
-app.include_router(api_router)
