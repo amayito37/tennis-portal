@@ -1,4 +1,4 @@
-import { Menu, Users, Trophy, Calendar } from "lucide-react";
+import { Menu, Users, Trophy, Calendar, User } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 export default function Sidebar({ open, setOpen }) {
@@ -28,6 +28,7 @@ export default function Sidebar({ open, setOpen }) {
         >
           <Menu size={18} /> Dashboard
         </NavLink>
+
         <NavLink
           to="/matches"
           className={({ isActive }) =>
@@ -38,6 +39,7 @@ export default function Sidebar({ open, setOpen }) {
         >
           <Trophy size={18} /> Matches
         </NavLink>
+
         <NavLink
           to="/rankings"
           className={({ isActive }) =>
@@ -48,6 +50,7 @@ export default function Sidebar({ open, setOpen }) {
         >
           <Users size={18} /> Rankings
         </NavLink>
+
         <NavLink
           to="/fixtures"
           className={({ isActive }) =>
@@ -57,6 +60,18 @@ export default function Sidebar({ open, setOpen }) {
           }
         >
           <Calendar size={18} /> Fixtures
+        </NavLink>
+
+        {/* 🧍 Profile link */}
+        <NavLink
+          to="/profile"
+          className={({ isActive }) =>
+            `flex items-center gap-3 p-2 rounded-md transition ${
+              isActive ? "bg-blue-100 text-blue-600 font-semibold" : "hover:bg-gray-100"
+            }`
+          }
+        >
+          <User size={18} /> Profile
         </NavLink>
       </nav>
     </aside>

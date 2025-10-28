@@ -8,6 +8,7 @@ import Rankings from "./pages/Rankings";
 import Matches from "./pages/Matches";
 import Fixtures from "./pages/Fixtures";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
 
 export default function App() {
   const [token, setToken] = useState(getToken());
@@ -47,6 +48,7 @@ export default function App() {
               <Route path="/rankings" element={<Rankings />} />
               <Route path="/matches" element={<Matches />} />
               <Route path="/fixtures" element={<Fixtures />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </main>
