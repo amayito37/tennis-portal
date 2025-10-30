@@ -41,6 +41,19 @@ export default function Sidebar({ open, setOpen }) {
         </NavLink>
 
         <NavLink
+          to="/groups"
+          className={({ isActive }) =>
+            `flex items-center gap-3 p-2 rounded-md transition ${
+              isActive ? "bg-blue-100 text-blue-600 font-semibold" : "hover:bg-gray-100"
+            }`
+          }
+        >
+          <Users size={18} /> Groups
+        </NavLink>
+
+
+
+        <NavLink
           to="/rankings"
           className={({ isActive }) =>
             `flex items-center gap-3 p-2 rounded-md transition ${
@@ -62,7 +75,6 @@ export default function Sidebar({ open, setOpen }) {
           <Calendar size={18} /> Fixtures
         </NavLink>
 
-        {/* 🧍 Profile link */}
         <NavLink
           to="/profile"
           className={({ isActive }) =>

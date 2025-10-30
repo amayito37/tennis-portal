@@ -12,15 +12,30 @@ class UserMeResponse(BaseModel):
     full_name: str
     points: int
     is_admin: bool
+    group_id: int | None = None
+    group_name: str | None = None
 
     class Config:
         from_attributes = True
 
 
 @router.get("/me", response_model=UserMeResponse)
-def get_profile(current_user: User = Depends(get_current_user)):
+def get_profile(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Return logged-in user info"""
-    return current_user
+    group_name = None
+    if current_user.group_id:
+        group = db.query(User).filter(User.group_id == current_user.group_id).first()
+        group_name = group.group.name if group and group.group else None
+
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "points": current_user.points,
+        "is_admin": current_user.is_admin,
+        "group_id": current_user.group_id,
+        "group_name": group_name,
+    }
 
 
 class ChangePasswordPayload(BaseModel):

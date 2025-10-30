@@ -13,5 +13,7 @@ class UserPublic(UserBase):
     is_admin: bool
     points: int
 
-    # ✅ New Pydantic v2 syntax (replaces class Config)
+    group_id: int | None = None
+    group_name: str | None = None
+
     model_config = ConfigDict(from_attributes=True)

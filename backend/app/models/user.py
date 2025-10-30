@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from app.db.base import Base
+from sqlalchemy.orm import relationship
 
 class User(Base):
     __tablename__ = "users"
@@ -10,3 +11,5 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     is_admin = Column(Boolean, default=False, nullable=False)
     points = Column(Integer, default=1000, nullable=False)
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=True)
+    group = relationship("Group", back_populates="players")

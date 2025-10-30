@@ -9,6 +9,8 @@ import Matches from "./pages/Matches";
 import Fixtures from "./pages/Fixtures";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
+import Groups from "./pages/Groups";
+import GroupDetails from "./pages/GroupDetails";
 
 export default function App() {
   const [token, setToken] = useState(getToken());
@@ -49,6 +51,8 @@ export default function App() {
               <Route path="/matches" element={<Matches />} />
               <Route path="/fixtures" element={<Fixtures />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/groups" element={<Groups />} />
+              <Route path="/groups/:id" element={<GroupDetails />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </main>

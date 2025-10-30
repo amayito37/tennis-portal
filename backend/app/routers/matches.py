@@ -67,6 +67,10 @@ def create_match(
     if not player1 or not player2:
         raise HTTPException(status_code=404, detail="Player not found")
 
+    if player1.group_id != player2.group_id:
+        raise HTTPException(status_code=400, detail="Players must be in the same group to play a match.")
+
+
     match = Match(
         player1_id=payload.player1_id,
         player2_id=payload.player2_id,
