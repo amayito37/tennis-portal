@@ -3,89 +3,121 @@ import Header from "../components/Header";
 import { apiGet, apiPost } from "../services/api";
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
-  const [form, setForm] = useState({ old_password: "", new_password: "" });
+  const [profile, setProfile] = useState(null);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    async function fetchUser() {
+    async function fetchProfile() {
       try {
         const data = await apiGet("/profile/me");
-        setUser(data);
+        setProfile(data);
       } catch (err) {
         console.error(err);
-        setError("Failed to load user data.");
       }
     }
-    fetchUser();
+    fetchProfile();
   }, []);
 
-  async function handleSubmit(e) {
+  async function handlePasswordChange(e) {
     e.preventDefault();
-    setMessage("");
-    setError("");
     try {
-      const res = await apiPost("/profile/change-password", form);
-      setMessage(res.message || "Password changed successfully!");
-      setForm({ old_password: "", new_password: "" });
+      await apiPost("/profile/change-password", {
+        old_password: oldPassword,
+        new_password: newPassword,
+      });
+      setMessage("✅ Password updated successfully!");
+      setOldPassword("");
+      setNewPassword("");
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || "Failed to change password.");
+      setMessage("❌ Failed to update password. Check your old password.");
     }
   }
 
-  if (!user && !error) return <div className="p-6">Loading...</div>;
+  if (!profile) return <div className="p-6">Loading...</div>;
 
   return (
-    <div className="flex flex-col flex-1 p-6 overflow-auto">
+    <div className="flex flex-col flex-1 p-6 overflow-auto bg-gray-50 min-h-screen">
       <Header />
-      <h1 className="text-2xl font-bold mb-6 text-blue-700">My Profile</h1>
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">Profile</h1>
 
-      {user && (
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <p><span className="font-semibold">Name:</span> {user.full_name}</p>
-          <p><span className="font-semibold">Email:</span> {user.email}</p>
-          <p><span className="font-semibold">Points:</span> {user.points}</p>
-          <p><span className="font-semibold">Role:</span> {user.is_admin ? "Admin" : "Player"}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* --- Profile Info --- */}
+        <div className="bg-white shadow-sm rounded-xl p-6 border border-gray-100">
+          <h2 className="text-lg font-semibold text-blue-600 mb-4">
+            Account Details
+          </h2>
+          <div className="space-y-3 text-gray-700">
+            <div className="flex justify-between">
+              <span className="font-medium">Name:</span>
+              <span>{profile.full_name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Email:</span>
+              <span>{profile.email}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Points:</span>
+              <span className="font-semibold text-blue-700">{profile.points}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Role:</span>
+              <span>{profile.is_admin ? "Admin" : "Player"}</span>
+            </div>
+          </div>
         </div>
-      )}
 
-      <div className="bg-white rounded-lg shadow-sm p-6 max-w-md">
-        <h2 className="text-lg font-semibold text-blue-600 mb-3">Change Password</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Current Password</label>
-            <input
-              type="password"
-              value={form.old_password}
-              onChange={(e) => setForm({ ...form, old_password: e.target.value })}
-              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">New Password</label>
-            <input
-              type="password"
-              value={form.new_password}
-              onChange={(e) => setForm({ ...form, new_password: e.target.value })}
-              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-              required
-            />
-          </div>
+        {/* --- Change Password --- */}
+        <div className="bg-white shadow-sm rounded-xl p-6 border border-gray-100">
+          <h2 className="text-lg font-semibold text-blue-600 mb-4">
+            Change Password
+          </h2>
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Current Password
+              </label>
+              <input
+                type="password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-100 focus:border-blue-500 outline-none"
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700"
-          >
-            Update Password
-          </button>
-        </form>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                New Password
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-blue-100 focus:border-blue-500 outline-none"
+              />
+            </div>
 
-        {message && <p className="text-green-600 mt-4">{message}</p>}
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md transition"
+            >
+              Update Password
+            </button>
+          </form>
+
+          {message && (
+            <p
+              className={`mt-3 text-sm font-medium ${
+                message.startsWith("✅") ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {message}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
