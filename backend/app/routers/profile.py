@@ -4,7 +4,7 @@ from app.auth.security import get_current_user, get_password_hash, verify_passwo
 from app.models.user import User
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/profile", tags=["profile"])
+router = APIRouter(tags=["profile"])
 
 class UserMeResponse(BaseModel):
     id: int
