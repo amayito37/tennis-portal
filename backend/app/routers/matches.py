@@ -7,7 +7,7 @@ from app.models.match_result import MatchResult
 from app.models.user import User
 from app.schemas.match import MatchPublic, MatchCreate
 from app.schemas.result import ResultCreate, SetScore
-from app.services.elo import calculate_elo_change
+from app.services.elo import calculate_elo_change, revert_elo_change
 
 router = APIRouter(tags=["matches"])
 
@@ -167,3 +167,43 @@ def update_match_result(
         "outcome": payload.outcome,
         "elo": {"winner_delta": d_win, "loser_delta": d_lose},
     }
+
+@router.put("/{match_id}/result/update")
+def update_existing_result(
+    match_id: int,
+    payload: ResultCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    result = match.result
+    if not result:
+        raise HTTPException(status_code=404, detail="No result found to update")
+
+    revert_elo_change(db.query(User).filter(User.id == result.winner_id).first(), db.query(User).filter(User.id == result.loser_id).first(), db)
+
+    # Replace the old result content
+    result.winner_id = payload.winner_id
+    result.loser_id = payload.loser_id
+    result.outcome = payload.outcome
+    result.sets = [s.model_dump() for s in payload.sets]
+
+    # Update ELO
+    winner = db.query(User).filter(User.id == payload.winner_id).first()
+    loser = db.query(User).filter(User.id == payload.loser_id).first()
+    d_win, d_lose = calculate_elo_change(winner.points, loser.points)
+    winner.points += d_win
+    loser.points += d_lose
+
+    db.add_all([winner, loser, result])
+    db.commit()
+    db.refresh(match)
+
+    return {"message": "Result updated successfully"}
+

@@ -29,6 +29,14 @@ def seed():
                 points=0,
             )
             db.add(user)
+    admin = User(
+        full_name="Rubén Almirón",
+        email="22rub3n@admin.com",
+        hashed_password=get_password_hash("admin"),
+        is_admin=True,
+        points=0,
+    )
+    db.add(admin)
     db.commit()
     db.close()
     print("✅ Seeded users with passwords successfully!")

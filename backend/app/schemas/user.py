@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, constr, ConfigDict
+from typing import Optional
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -17,3 +18,8 @@ class UserPublic(UserBase):
     group_name: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class UserUpdate(BaseModel):
+    points: Optional[int] = None
+    group_id: Optional[int] = None
+

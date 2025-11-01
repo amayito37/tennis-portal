@@ -1,13 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
 
 const OUTCOMES = ["COMPLETED", "RETIREMENT", "WALKOVER", "ADMIN_DECISION"];
 
-export default function ReportResultModal({ match, me, onClose, onSuccess }) {
+export default function ReportResultModal({ match, me, onClose, onSuccess, isEditMode = false }) {
   const [winnerId, setWinnerId] = useState(null);
   const [outcome, setOutcome] = useState("COMPLETED");
   const [sets, setSets] = useState([{ p1_games: 6, p2_games: 3, super_tiebreak: false }]);
   const [loading, setLoading] = useState(false);
+
+  // ✅ Pre-fill existing result when editing
+  useEffect(() => {
+    if (isEditMode && match.result) {
+      setWinnerId(match.result.winner_id);
+      setOutcome(match.result.outcome || "COMPLETED");
+      setSets(
+        match.result.sets?.length
+          ? match.result.sets.map((s) => ({
+              p1_games: s.p1_games,
+              p2_games: s.p2_games,
+              p1_tiebreak: s.p1_tiebreak,
+              p2_tiebreak: s.p2_tiebreak,
+              super_tiebreak: s.super_tiebreak,
+            }))
+          : [{ p1_games: 6, p2_games: 3, super_tiebreak: false }]
+      );
+    }
+  }, [isEditMode, match.result]);
 
   const addSet = () => setSets([...sets, { p1_games: 6, p2_games: 3, super_tiebreak: false }]);
   const removeSet = (i) => setSets(sets.filter((_, idx) => idx !== i));
@@ -18,39 +37,43 @@ export default function ReportResultModal({ match, me, onClose, onSuccess }) {
     if (!winnerId) return;
     setLoading(true);
 
-    const loserId =
-        match.player1.id === winnerId ? match.player2.id : match.player1.id;
+    const loserId = match.player1.id === winnerId ? match.player2.id : match.player1.id;
 
     const body = {
-        winner_id: winnerId,
-        loser_id: loserId,
-        outcome,
-        sets:
+      winner_id: winnerId,
+      loser_id: loserId,
+      outcome,
+      sets:
         outcome === "COMPLETED"
-            ? sets.map((s) => ({
-                p1_games: Number(s.p1_games),
-                p2_games: Number(s.p2_games),
-                p1_tiebreak: s.p1_tiebreak ? Number(s.p1_tiebreak) : null,
-                p2_tiebreak: s.p2_tiebreak ? Number(s.p2_tiebreak) : null,
-                super_tiebreak: Boolean(s.super_tiebreak),
+          ? sets.map((s) => ({
+              p1_games: Number(s.p1_games),
+              p2_games: Number(s.p2_games),
+              p1_tiebreak: s.p1_tiebreak ? Number(s.p1_tiebreak) : null,
+              p2_tiebreak: s.p2_tiebreak ? Number(s.p2_tiebreak) : null,
+              super_tiebreak: Boolean(s.super_tiebreak),
             }))
-            : [],
+          : [],
     };
 
     try {
-        await api.put(`/matches/${match.id}/result`, body);
-        await onSuccess?.();
-        onClose();
+      const endpoint = isEditMode
+        ? `/matches/${match.id}/result/update`
+        : `/matches/${match.id}/result`;
+
+      await api.put(endpoint, body);
+      await onSuccess?.();
+      onClose();
     } catch (err) {
-        alert("Error submitting result: " + (err.response?.data?.detail || err.message));
+      alert("Error submitting result: " + (err.response?.data?.detail || err.message));
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    };
+  };
 
-
+  // ✅ Admins can always edit; players only if involved
   const canSubmit =
-    me && (me.id === match.player1.id || me.id === match.player2.id);
+    me &&
+    (me.is_admin || me.id === match.player1.id || me.id === match.player2.id);
 
   if (!canSubmit) return null;
 
@@ -58,7 +81,8 @@ export default function ReportResultModal({ match, me, onClose, onSuccess }) {
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
         <h2 className="text-lg font-semibold mb-4">
-          Report Result: {match.player1.full_name} vs {match.player2.full_name}
+          {isEditMode ? "Edit Result" : "Report Result"}:{" "}
+          {match.player1.full_name} vs {match.player2.full_name}
         </h2>
 
         <label className="block mb-2 text-sm font-medium text-gray-700">Winner</label>
@@ -114,9 +138,7 @@ export default function ReportResultModal({ match, me, onClose, onSuccess }) {
                   <input
                     type="checkbox"
                     checked={s.super_tiebreak}
-                    onChange={(e) =>
-                      updateSet(i, "super_tiebreak", e.target.checked)
-                    }
+                    onChange={(e) => updateSet(i, "super_tiebreak", e.target.checked)}
                   />
                   Super TB
                 </label>
@@ -143,7 +165,7 @@ export default function ReportResultModal({ match, me, onClose, onSuccess }) {
             onClick={handleSubmit}
             className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            {loading ? "Saving..." : "Submit"}
+            {loading ? "Saving..." : isEditMode ? "Save Changes" : "Submit"}
           </button>
         </div>
       </div>

@@ -12,7 +12,7 @@ db.query(Match).delete()
 db.commit()
 
 # Deterministic setup (no randomness)
-users = db.query(User).order_by(User.id).all()
+users = db.query(User).filter(User.is_admin == False).order_by(User.id).all()
 users_by_group = {}
 for u in users:
     users_by_group.setdefault(u.group_id, []).append(u)

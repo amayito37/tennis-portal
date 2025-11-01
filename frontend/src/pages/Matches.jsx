@@ -1,21 +1,29 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import { apiGet } from "../services/api";
+import ReportResultModal from "../components/ReportResultModal";
 
 export default function Matches() {
   const [results, setResults] = useState([]);
+  const [me, setMe] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedMatch, setSelectedMatch] = useState(null);
+
+  const fetchResults = async () => {
+    try {
+      const [data, meResp] = await Promise.all([
+        apiGet("/matches/results"),
+        apiGet("/profile/me").catch(() => null),
+      ]);
+      setResults(data);
+      setMe(meResp);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load results.");
+    }
+  };
 
   useEffect(() => {
-    async function fetchResults() {
-      try {
-        const data = await apiGet("/matches/results");
-        setResults(data);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load results.");
-      }
-    }
     fetchResults();
   }, []);
 
@@ -38,6 +46,7 @@ export default function Matches() {
                 <th className="px-4 py-3 text-left">Score</th>
                 <th className="px-4 py-3 text-left">Winner</th>
                 <th className="px-4 py-3 text-left">Date</th>
+                {me?.is_admin && <th className="px-4 py-3 text-left">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -67,11 +76,32 @@ export default function Matches() {
                         })
                       : "-"}
                   </td>
+
+                  {me?.is_admin && (
+                    <td className="px-4 py-2 text-right">
+                      <button
+                        onClick={() => setSelectedMatch(m)}
+                        className="px-2 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded text-sm"
+                      >
+                        ✎ Edit Result
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {selectedMatch && (
+        <ReportResultModal
+          match={selectedMatch}
+          me={me}
+          onClose={() => setSelectedMatch(null)}
+          onSuccess={fetchResults}
+          isEditMode={true}
+        />
       )}
     </div>
   );

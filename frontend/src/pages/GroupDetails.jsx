@@ -36,7 +36,7 @@ export default function GroupDetails() {
   }, [id]);
 
   const canReport = (f) =>
-    me && (f.player1.id === me.id || f.player2.id === me.id);
+    me && (f.player1.id === me.id || f.player2.id === me.id || me.is_admin);
 
   return (
     <div className="flex flex-col flex-1 p-6">
