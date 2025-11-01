@@ -1,18 +1,23 @@
-from sqlalchemy.orm import Session
-from app.models.user import User
+import math
 
-def apply_elo(db: Session, winner_id: int, loser_id: int, k: int = 32) -> None:
-    winner = db.query(User).filter(User.id == winner_id).first()
-    loser = db.query(User).filter(User.id == loser_id).first()
-    if not winner or not loser:
-        return
+def calculate_elo_change(winner_points: int, loser_points: int) -> tuple[int, int]:
+    """
+    Returns (winner_delta, loser_delta) based on custom ELO rules.
+    """
+    diff = abs(winner_points - loser_points)
 
-    expected_winner = 1 / (1 + 10 ** ((loser.points - winner.points) / 400))
-    expected_loser = 1 - expected_winner
+    # Same ELO
+    if winner_points == loser_points:
+        return 21, -21
 
-    winner.points = max(0, int(winner.points + k * (1 - expected_winner)))
-    loser.points = max(0, int(loser.points + k * (0 - expected_loser)))
+    # Winner had higher ELO
+    if winner_points > loser_points:
+        # Extreme mismatch → no change
+        if diff > 1000:
+            return 0, 0
+        delta = math.ceil((1001 - diff) / 50)
+        return delta, -delta
 
-    db.add(winner)
-    db.add(loser)
-    db.flush()
+    # Winner had lower ELO (upset win)
+    delta = 20 + 3 * (diff // 10)
+    return delta, -delta

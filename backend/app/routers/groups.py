@@ -5,6 +5,8 @@ from app.auth.security import get_db, get_current_user
 from app.models.group import Group
 from app.models.user import User
 from app.models.match import Match, MatchStatus
+from app.schemas.match import MatchPublic
+from app.routers.matches import _format_score
 
 router = APIRouter(tags=["groups"])
 
@@ -60,7 +62,7 @@ def list_group_players(group_id: int, db: Session = Depends(get_db), _=Depends(g
         for u in players
     ]
 
-@router.get("/{group_id}/matches")
+@router.get("/{group_id}/matches", response_model=List[MatchPublic])
 def list_group_matches(group_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
     # Only matches where both players are in this group
     ids = [u.id for u in db.query(User.id).filter(User.group_id == group_id).all()]
@@ -68,28 +70,19 @@ def list_group_matches(group_id: int, db: Session = Depends(get_db), _=Depends(g
         return []
     matches = (
         db.query(Match)
+        .options(joinedload(Match.player1), joinedload(Match.player2))
         .filter(Match.player1_id.in_(ids), Match.player2_id.in_(ids), Match.played == True)
         .order_by(Match.scheduled_date.desc())
         .all()
     )
-    def user_name(uid):
-        u = db.query(User).get(uid)
-        return u.full_name if u else None
-    return [
-        {
-            "id": m.id,
-            "player1_name": user_name(m.player1_id),
-            "player2_name": user_name(m.player2_id),
-            "winner_name": user_name(m.winner_id) if m.winner_id else None,
-            "score": m.score,
-            "date": m.scheduled_date.isoformat() if m.scheduled_date else None,
-            "status": m.status.value if hasattr(m.status, "value") else str(m.status),
-            "played": m.played,
-        }
-        for m in matches
-    ]
+    for m in matches:
+        if m.status == MatchStatus.COMPLETED and m.result and isinstance(m.result.sets, list):
+            m.score = _format_score(m.result.sets)
+        else:
+            m.score = None
+    return matches
 
-@router.get("/{group_id}/fixtures")
+@router.get("/{group_id}/fixtures", response_model=List[MatchPublic])
 def list_group_fixtures(group_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
     """Return all upcoming (unplayed) fixtures for a group"""
     from app.models.user import User
@@ -102,6 +95,7 @@ def list_group_fixtures(group_id: int, db: Session = Depends(get_db), _=Depends(
     # Get all unplayed matches between those players
     fixtures = (
         db.query(Match)
+        .options(joinedload(Match.player1), joinedload(Match.player2))
         .filter(
             Match.played == False,
             Match.player1_id.in_(player_ids),
@@ -110,17 +104,7 @@ def list_group_fixtures(group_id: int, db: Session = Depends(get_db), _=Depends(
         .all()
     )
 
-    return [
-        {
-            "id": m.id,
-            "player1_id": m.player1_id,
-            "player2_id": m.player2_id,
-            "player1_name": next((p.full_name for p in players if p.id == m.player1_id), None),
-            "player2_name": next((p.full_name for p in players if p.id == m.player2_id), None),
-            "scheduled_date": m.scheduled_date,
-        }
-        for m in fixtures
-    ]
+    return fixtures
 
 @router.get("/{group_id}/table")
 def group_table(group_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):

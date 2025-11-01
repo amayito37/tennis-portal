@@ -24,3 +24,11 @@ class Match(Base):
     player1 = relationship("User", foreign_keys=[player1_id], lazy="joined")
     player2 = relationship("User", foreign_keys=[player2_id], lazy="joined")
     winner = relationship("User", foreign_keys=[winner_id], lazy="joined")
+
+    result = relationship(
+        "MatchResult",
+        uselist=False,
+        back_populates="match",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
