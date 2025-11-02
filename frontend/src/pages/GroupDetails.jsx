@@ -8,14 +8,14 @@ export default function GroupDetails() {
   const { id } = useParams();
   const [group, setGroup] = useState(null);
   const [players, setPlayers] = useState([]);
-  const [table, setTable] = useState([]);
+  const [standings, setStandings] = useState([]);
   const [matches, setMatches] = useState([]);
   const [fixtures, setFixtures] = useState([]);
   const [me, setMe] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState(null);
 
   async function load() {
-    const [g, p, t, m, f, meResp] = await Promise.all([
+    const [g, p, st, m, f, meResp] = await Promise.all([
       apiGet(`/groups/${id}`),
       apiGet(`/groups/${id}/players`),
       apiGet(`/groups/${id}/table`),
@@ -25,7 +25,7 @@ export default function GroupDetails() {
     ]);
     setGroup(g);
     setPlayers(p);
-    setTable(t);
+    setStandings(st);
     setMatches(m);
     setFixtures(f);
     setMe(meResp);
@@ -62,36 +62,40 @@ export default function GroupDetails() {
           </ul>
         </div>
 
-        {/* Group table */}
         <div className="bg-white rounded-lg shadow-sm p-4">
-          <h2 className="text-lg font-semibold text-blue-600 mb-3">
-            Standings (W/L)
-          </h2>
+          <h2 className="text-lg font-semibold text-blue-600 mb-3">Standings</h2>
           <table className="min-w-full text-sm">
             <thead className="bg-gray-100 text-gray-600">
               <tr>
                 <th className="px-3 py-2 text-left">#</th>
                 <th className="px-3 py-2 text-left">Player</th>
-                <th className="px-3 py-2">W</th>
-                <th className="px-3 py-2">L</th>
-                <th className="px-3 py-2">P</th>
+                <th className="px-3 py-2 text-center">Matches</th>
+                <th className="px-3 py-2 text-center">Sets</th>
+                <th className="px-3 py-2 text-center">Games</th>
+                <th className="px-3 py-2 text-center">ELO</th>
               </tr>
             </thead>
             <tbody>
-              {table.map((r) => (
-                <tr key={r.player_id} className="border-t">
+              {standings.map((r) => (
+                <tr key={r.id} className="border-t">
                   <td className="px-3 py-2">{r.rank}</td>
                   <td className="px-3 py-2">{r.player_name}</td>
-                  <td className="px-3 py-2 text-center">{r.wins}</td>
-                  <td className="px-3 py-2 text-center">{r.losses}</td>
-                  <td className="px-3 py-2 text-center">{r.played}</td>
+                  <td className="px-3 py-2 text-center">
+                    {r.matches_won}-{r.matches_played - r.matches_won}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    {r.sets_won}-{r.sets_played - r.sets_won}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    {r.games_won}-{r.games_played - r.games_won}
+                  </td>
+                  <td className="px-3 py-2 text-center">{r.points}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Upcoming Fixtures */}
         {fixtures.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm p-4 lg:col-span-2">
             <h2 className="text-lg font-semibold text-blue-600 mb-3">
@@ -133,7 +137,6 @@ export default function GroupDetails() {
           </div>
         )}
 
-        {/* Matches */}
         <div className="bg-white rounded-lg shadow-sm p-4 lg:col-span-2">
           <h2 className="text-lg font-semibold text-blue-600 mb-3">
             Recent Matches

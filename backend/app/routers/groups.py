@@ -7,6 +7,7 @@ from app.models.user import User
 from app.models.match import Match, MatchStatus
 from app.schemas.match import MatchPublic
 from app.routers.matches import _format_score
+from app.services.stats import compute_player_stats
 
 router = APIRouter(tags=["groups"])
 
@@ -107,57 +108,31 @@ def list_group_fixtures(group_id: int, db: Session = Depends(get_db), _=Depends(
     return fixtures
 
 @router.get("/{group_id}/table")
-def group_table(group_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    ids = [u.id for u in db.query(User.id).filter(User.group_id == group_id).all()]
-    if not ids:
-        return []
-
-    # compute W/L only from matches within this group and played
-    q = (
-        db.query(Match)
-        .filter(
-            Match.player1_id.in_(ids),
-            Match.player2_id.in_(ids),
-            Match.played == True,
-        )
+def group_table(group_id: int, db: Session = Depends(get_db)):
+    users = (
+        db.query(User)
+        .filter(User.group_id == group_id, User.is_admin == False)
         .all()
     )
-    stats = {uid: {"player_id": uid, "wins": 0, "losses": 0} for uid in ids}
-    for m in q:
-        if not m.winner_id:
-            continue
-        loser_id = m.player2_id if m.winner_id == m.player1_id else m.player1_id
-        if m.winner_id in stats:
-            stats[m.winner_id]["wins"] += 1
-        if loser_id in stats:
-            stats[loser_id]["losses"] += 1
 
-    # attach names
-    users = {u.id: u.full_name for u in db.query(User).filter(User.id.in_(ids)).all()}
-    table = []
-    for uid, s in stats.items():
+    table: List[Dict[str, Any]] = []
+    for u in users:
+        stats = compute_player_stats(db, u)
         table.append({
-            "player_id": uid,
-            "player_name": users.get(uid, f"#{uid}"),
-            "wins": s["wins"],
-            "losses": s["losses"],
-            "played": s["wins"] + s["losses"],
+            "id": u.id,
+            "player_name": u.full_name,
+            "points": u.points,
+            **stats,
         })
-    # sort by wins desc, losses asc, then name
-    table.sort(key=lambda r: (-r["wins"], r["losses"], r["player_name"].lower()))
-    # add rank
-    for i, row in enumerate(table, start=1):
-        row["rank"] = i
+
+    # Sort by performance (same internal logic)
+    table.sort(
+        key=lambda r: (r["win_pct"], r["set_pct"], r["game_pct"], r["points"]),
+        reverse=True,
+    )
+
+    for i, row in enumerate(table):
+        row["rank"] = i + 1
+
     return table
 
-@router.post("/{group_id}/assign/{user_id}")
-def assign_player(group_id: int, user_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    g = db.query(Group).get(group_id)
-    if not g:
-        raise HTTPException(status_code=404, detail="Group not found")
-    u = db.query(User).get(user_id)
-    if not u:
-        raise HTTPException(status_code=404, detail="User not found")
-    u.group_id = group_id
-    db.commit()
-    return {"message": "Player assigned", "user_id": user_id, "group_id": group_id}
