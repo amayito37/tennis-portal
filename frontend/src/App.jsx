@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Groups from "./pages/Groups";
 import GroupDetails from "./pages/GroupDetails";
+import AdminRounds from "./pages/AdminRounds";
 
 export default function App() {
   const [token, setToken] = useState(getToken());
@@ -53,6 +54,7 @@ export default function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/groups" element={<Groups />} />
               <Route path="/groups/:id" element={<GroupDetails />} />
+              <Route path="/admin/rounds" element={<AdminRounds />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </main>

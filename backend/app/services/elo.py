@@ -8,7 +8,7 @@ def calculate_elo_change(winner_points: int, loser_points: int) -> tuple[int, in
 
     # Same ELO
     if winner_points == loser_points:
-        return 21, -21
+        return 20, -20
 
     # Winner had higher ELO
     if winner_points > loser_points:
@@ -20,6 +20,7 @@ def calculate_elo_change(winner_points: int, loser_points: int) -> tuple[int, in
 
     # Winner had lower ELO (upset win)
     delta = 20 + 3 * (diff // 10)
+    # TODO: add points based on group result, group 1: 13 - group13: 1
     return delta, -delta
 
 

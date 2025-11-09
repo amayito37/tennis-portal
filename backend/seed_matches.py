@@ -2,16 +2,21 @@ from app.db.session import SessionLocal
 from app.models.match import Match
 from app.models.user import User
 from app.models.match_result import MatchResult
+from app.models.round import Round
 from datetime import datetime, timedelta
 
 db = SessionLocal()
 
-# Clean existing data
+# Clean existing matches
 db.query(MatchResult).delete()
 db.query(Match).delete()
 db.commit()
 
-# Deterministic setup (no randomness)
+# Get active round
+current_round = db.query(Round).filter(Round.status == "ACTIVE").first()
+if not current_round:
+    raise Exception("❌ No active round found. Please seed a round first.")
+
 users = db.query(User).filter(User.is_admin == False).order_by(User.id).all()
 users_by_group = {}
 for u in users:
@@ -19,8 +24,6 @@ for u in users:
 
 now = datetime.utcnow()
 matches_to_seed = []
-
-# Deterministic counters
 match_index = 0
 
 for group_id, players in users_by_group.items():
@@ -32,29 +35,35 @@ for group_id, players in users_by_group.items():
     # Create exactly 4 matches per group
     for game_num in range(4):
         match_index += 1
-
         match = Match(
             player1_id=p1.id,
             player2_id=p2.id,
             scheduled_date=now + timedelta(days=game_num + group_id),
             played=False,
             status="SCHEDULED",
+            round_id=current_round.id,  # ✅ assign round
         )
 
         db.add(match)
-        db.flush()  # Ensure match.id exists
+        db.flush()  # ensure match.id exists
 
-        # Alternate deterministically → 50% completed, 50% scheduled
+        # 50% completed matches (deterministic)
         if match_index % 2 == 0:
-            winner = p1 if game_num % 2 == 0 else p2
-            loser = p2 if winner == p1 else p1
-
-            # Deterministic fixed result for debug visibility
-            sets = [
-                {"p1_games": 6, "p2_games": 4, "p1_tiebreak": None, "p2_tiebreak": None, "super_tiebreak": False},
-                {"p1_games": 3, "p2_games": 6, "p1_tiebreak": None, "p2_tiebreak": None, "super_tiebreak": False},
-                {"p1_games": 6, "p2_games": 2, "p1_tiebreak": None, "p2_tiebreak": None, "super_tiebreak": False},
-            ]
+            # Winner wins more sets deterministically
+            if game_num % 2 == 0:
+                sets = [
+                    {"p1_games": 6, "p2_games": 4, "p1_tiebreak": None, "p2_tiebreak": None, "super_tiebreak": False},
+                    {"p1_games": 2, "p2_games": 6, "p1_tiebreak": None, "p2_tiebreak": None, "super_tiebreak": False},
+                    {"p1_games": 6, "p2_games": 3, "p1_tiebreak": None, "p2_tiebreak": None, "super_tiebreak": False},
+                ]
+                winner, loser = p1, p2
+            else:
+                sets = [
+                    {"p1_games": 3, "p2_games": 6, "p1_tiebreak": None, "p2_tiebreak": None, "super_tiebreak": False},
+                    {"p1_games": 6, "p2_games": 4, "p1_tiebreak": None, "p2_tiebreak": None, "super_tiebreak": False},
+                    {"p1_games": 5, "p2_games": 7, "p1_tiebreak": None, "p2_tiebreak": None, "super_tiebreak": False},
+                ]
+                winner, loser = p2, p1
 
             result = MatchResult(
                 match_id=match.id,
@@ -73,6 +82,5 @@ for group_id, players in users_by_group.items():
         matches_to_seed.append(match)
 
 db.commit()
-print(f"✅ Seeded {len(matches_to_seed)} matches successfully.")
 completed = len([m for m in matches_to_seed if m.status == "COMPLETED"])
-print(f"✅ {completed} completed, {len(matches_to_seed) - completed} scheduled.")
+print(f"✅ Seeded {len(matches_to_seed)} matches ({completed} completed, {len(matches_to_seed) - completed} scheduled).")

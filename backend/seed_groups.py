@@ -1,41 +1,27 @@
-from app.db.session import SessionLocal, engine
+from app.db.session import SessionLocal
 from app.models.group import Group
-from app.models.user import User
-from app.db.base import Base
+from app.models.round import Round
 
-def seed():
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
+db = SessionLocal()
 
-    # Create some example groups
-    names = ["Group A", "Group B", "Group C"]
-    groups = {}
-    for n in names:
-        g = db.query(Group).filter_by(name=n).first()
-        if not g:
-            g = Group(name=n, description=f"Players in {n}")
-            db.add(g)
-            db.commit()
-            db.refresh(g)
-        groups[n] = g
-
-    # Assign players manually for now
-    assigns = {
-        "Group A": ["John Doe", "Jane Smith"],
-        "Group B": ["Alex Johnson", "Samuel Williams"],
-        "Group C": ["Lucas Brown", "Short Pass"],
-    }
-
-    for gname, plist in assigns.items():
-        gid = groups[gname].id
-        for pname in plist:
-            u = db.query(User).filter(User.full_name == pname).first()
-            if u:
-                u.group_id = gid
-
+# Ensure at least one active round exists
+active_round = db.query(Round).filter(Round.status == "ACTIVE").first()
+if not active_round:
+    active_round = Round(name="Round 1", status="ACTIVE")
+    db.add(active_round)
     db.commit()
-    db.close()
-    print("✅ Groups created and players assigned successfully!")
+    print("✅ Created Round 1 as active round")
 
-if __name__ == "__main__":
-    seed()
+# Create groups if not already existing
+groups = [
+    ("Group A", "Players in Group A"),
+    ("Group B", "Players in Group B"),
+    ("Group C", "Players in Group C"),
+]
+
+for name, desc in groups:
+    if not db.query(Group).filter(Group.name == name).first():
+        db.add(Group(name=name, description=desc))
+
+db.commit()
+print("✅ Groups seeded successfully.")

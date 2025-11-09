@@ -20,10 +20,12 @@ class Match(Base):
     scheduled_date = Column(DateTime, default=datetime.utcnow)
     played = Column(Boolean, default=False)
     status = Column(Enum(MatchStatus), default=MatchStatus.SCHEDULED)
+    round_id = Column(Integer, ForeignKey("rounds.id"), nullable=True, index=True)
 
     player1 = relationship("User", foreign_keys=[player1_id], lazy="joined")
     player2 = relationship("User", foreign_keys=[player2_id], lazy="joined")
     winner = relationship("User", foreign_keys=[winner_id], lazy="joined")
+    round = relationship("Round")
 
     result = relationship(
         "MatchResult",

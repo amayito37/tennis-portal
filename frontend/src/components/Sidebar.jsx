@@ -1,7 +1,23 @@
+import { useState, useEffect } from "react";
 import { Menu, Users, Trophy, Calendar, User } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { apiGet } from "../services/api"; // ✅ same helper you use elsewhere
 
 export default function Sidebar({ open, setOpen }) {
+  const [me, setMe] = useState(null);
+
+  useEffect(() => {
+    async function loadMe() {
+      try {
+        const res = await apiGet("/profile/me");
+        setMe(res);
+      } catch {
+        setMe(null);
+      }
+    }
+    loadMe();
+  }, []);
+
   return (
     <aside
       className={`fixed inset-y-0 left-0 transform bg-white shadow-md z-50 w-64 transition-transform duration-300 ease-in-out
@@ -51,8 +67,6 @@ export default function Sidebar({ open, setOpen }) {
           <Users size={18} /> Groups
         </NavLink>
 
-
-
         <NavLink
           to="/rankings"
           className={({ isActive }) =>
@@ -85,6 +99,22 @@ export default function Sidebar({ open, setOpen }) {
         >
           <User size={18} /> Profile
         </NavLink>
+
+        {/* ✅ Only visible for admins */}
+        {me?.is_admin && (
+          <NavLink
+            to="/admin/rounds"
+            className={({ isActive }) =>
+              `flex items-center gap-3 p-2 rounded-md transition ${
+                isActive
+                  ? "bg-purple-100 text-purple-700 font-semibold"
+                  : "hover:bg-gray-100 text-purple-700"
+              }`
+            }
+          >
+            <Calendar size={18} /> Admin Rounds
+          </NavLink>
+        )}
       </nav>
     </aside>
   );

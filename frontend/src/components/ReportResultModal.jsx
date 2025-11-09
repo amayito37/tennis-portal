@@ -9,7 +9,6 @@ export default function ReportResultModal({ match, me, onClose, onSuccess, isEdi
   const [sets, setSets] = useState([{ p1_games: 6, p2_games: 3, super_tiebreak: false }]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Pre-fill existing result when editing
   useEffect(() => {
     if (isEditMode && match.result) {
       setWinnerId(match.result.winner_id);
