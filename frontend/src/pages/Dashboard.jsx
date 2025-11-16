@@ -135,7 +135,15 @@ export default function Dashboard() {
                 <li key={m.id} className="py-2 flex justify-between text-sm items-center">
                   <span>{m.player1?.full_name} vs {m.player2?.full_name}</span>
                   <div className="text-right">
-                    <span className="font-medium">{m.score || "-"}</span>
+                    <span className="font-medium">{m.result.outcome == "COMPLETED" 
+                    ? m.score 
+                    : m.result.outcome == "WALKOVER"
+                    ? "No presentado"
+                    : m.result.outcome == "RETIREMENT"
+                    ? "Retirada"
+                    : m.result.outcome == "ADMIN_DECISION"
+                    ? "Decisión administrativa"
+                    : "-" }</span>
                     <span className="text-blue-600 text-xs block">
                       Ganador: {m.winner?.full_name || "-"}
                     </span>

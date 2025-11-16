@@ -186,27 +186,32 @@ export default function ReportResultModal({
           Resultado
         </label>
         <select
-            value={outcome}
-            onChange={(e) => setOutcome(e.target.value)}
-            className="w-full border rounded p-2 mb-4"
+        value={outcome}
+        onChange={(e) => setOutcome(e.target.value)}
+        className="w-full border rounded p-2 mb-4"
         >
-            {OUTCOMES.map((o) => (
-                <option key={o} value={o}>
+        {(me?.is_admin ? OUTCOMES : OUTCOMES.filter(o => o !== "ADMIN_DECISION"))
+            .map((o) => (
+            <option key={o} value={o}>
                 {OUTCOME_LABELS[o]}
-                </option>
+            </option>
             ))}
         </select>
 
         {outcome === "COMPLETED" && (
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-medium">Sets</h3>
-              <button
-                onClick={addSet}
-                className="text-sm bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
-              >
-                + Añadir
-              </button>
+                <h3 className="font-medium">Sets</h3>
+
+                {/* Hide add button once 3 sets exist */}
+                {sets.length < 3 && (
+                    <button
+                    onClick={addSet}
+                    className="text-sm bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+                    >
+                    + Añadir
+                    </button>
+                )}
             </div>
 
             {/* Column labels */}
@@ -226,36 +231,45 @@ export default function ReportResultModal({
               <div key={i} className="grid grid-cols-12 gap-2 items-center mb-2">
                 {/* Winner column */}
                 <input
-                  type="number"
-                  className="col-span-2 border rounded p-2"
-                  value={s.p1_games}
-                  onChange={(e) =>
-                    updateSet(i, "p1_games", e.target.value)
-                  }
+                    type="number"
+                    min="0"
+                    max={s.super_tiebreak ? 10 : 7}
+                    className="col-span-2 border rounded p-2"
+                    value={s.p1_games}
+                    onChange={(e) =>
+                        updateSet(i, "p1_games", e.target.value)
+                    }
                 />
+
 
                 <span className="col-span-1 text-center">-</span>
 
                 {/* Loser column */}
                 <input
-                  type="number"
-                  className="col-span-2 border rounded p-2"
-                  value={s.p2_games}
-                  onChange={(e) =>
-                    updateSet(i, "p2_games", e.target.value)
-                  }
+                    type="number"
+                    min="0"
+                    max={s.super_tiebreak ? 10 : 7}
+                    className="col-span-2 border rounded p-2"
+                    value={s.p2_games}
+                    onChange={(e) =>
+                        updateSet(i, "p2_games", e.target.value)
+                    }
                 />
 
+                {i === 2 ? (
                 <label className="col-span-4 flex items-center gap-2 text-sm">
-                  <input
+                    <input
                     type="checkbox"
                     checked={s.super_tiebreak}
                     onChange={(e) =>
-                      updateSet(i, "super_tiebreak", e.target.checked)
+                        updateSet(i, "super_tiebreak", e.target.checked)
                     }
-                  />
-                  Super TB
+                    />
+                    Super TB
                 </label>
+                ) : (
+                <div className="col-span-4" />  // keep layout aligned
+                )}
 
                 <button
                   onClick={() => removeSet(i)}
@@ -278,10 +292,15 @@ export default function ReportResultModal({
           <button
             disabled={!winnerId || loading}
             onClick={handleSubmit}
-            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
+            className={`px-3 py-1 rounded text-white
+                ${!winnerId || loading
+                ? "bg-gray-300 cursor-not-allowed opacity-60"
+                : "bg-blue-600 hover:bg-blue-700"
+                }`}
+            >
             {loading ? "Guardando..." : isEditMode ? "Guardar cambios" : "Confirmar"}
           </button>
+
         </div>
       </div>
     </div>

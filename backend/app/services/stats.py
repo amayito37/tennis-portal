@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.models.match import Match, MatchStatus
+from app.models.round import Round, RoundStatus
 
 def compute_player_stats(db: Session, player: User):
     """
@@ -8,10 +9,14 @@ def compute_player_stats(db: Session, player: User):
     Matches: count any match with match.played == True (regardless of outcome).
     Sets/games: counted from result.sets if present.
     """
+
+    current_round = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
+
     # All matches that were played where this user participated
     matches = (
         db.query(Match)
         .filter(Match.played == True)
+        .filter(Match.round == current_round)
         .filter((Match.player1_id == player.id) | (Match.player2_id == player.id))
         .all()
     )

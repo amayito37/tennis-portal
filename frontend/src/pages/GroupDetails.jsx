@@ -152,7 +152,15 @@ export default function GroupDetails() {
                   <tr key={m.id} className="border-t">
                     <td className="px-3 py-2">{m.player1.full_name || "-"}</td>
                     <td className="px-3 py-2">{m.player2.full_name || "-"}</td>
-                    <td className="px-3 py-2 text-center">{m.score || "-"}</td>
+                    <td className="px-3 py-2 text-center">{m.result.outcome == "COMPLETED" 
+                    ? m.score 
+                    : m.result.outcome == "WALKOVER"
+                    ? "No presentado"
+                    : m.result.outcome == "RETIREMENT"
+                    ? "Retirada"
+                    : m.result.outcome == "ADMIN_DECISION"
+                    ? "Decisión administrativa"
+                    : "-" }</td>
                     <td className="px-3 py-2 text-center">
                       {m.winner.full_name || "-"}
                     </td>

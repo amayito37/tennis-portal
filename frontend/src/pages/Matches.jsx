@@ -61,7 +61,15 @@ export default function Matches() {
                     {m.player2?.full_name || "-"}
                   </td>
                   <td className="px-4 py-2 text-gray-700 font-medium">
-                    {m.score || "-"}
+                    {m.result.outcome == "COMPLETED" 
+                    ? m.score 
+                    : m.result.outcome == "WALKOVER"
+                    ? "No presentado"
+                    : m.result.outcome == "RETIREMENT"
+                    ? "Retirada"
+                    : m.result.outcome == "ADMIN_DECISION"
+                    ? "Decisión administrativa"
+                    : "-" }
                   </td>
                   <td className="px-4 py-2 font-semibold text-blue-700">
                     {m.winner?.full_name || "-"}

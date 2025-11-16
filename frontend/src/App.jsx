@@ -13,6 +13,9 @@ import Groups from "./pages/Groups";
 import GroupDetails from "./pages/GroupDetails";
 import AdminRounds from "./pages/AdminRounds";
 
+// NEW
+import AdminRoute from "./components/AdminRoute";
+
 export default function App() {
   const [token, setToken] = useState(getToken());
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -54,7 +57,16 @@ export default function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/groups" element={<Groups />} />
               <Route path="/groups/:id" element={<GroupDetails />} />
-              <Route path="/admin/rounds" element={<AdminRounds />} />
+
+              <Route
+                path="/admin/rounds"
+                element={
+                  <AdminRoute>
+                    <AdminRounds />
+                  </AdminRoute>
+                }
+              />
+
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </main>

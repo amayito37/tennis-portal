@@ -5,6 +5,7 @@ from app.auth.security import get_current_user, get_db
 from app.models.match import Match, MatchStatus
 from app.models.match_result import MatchResult
 from app.models.user import User
+from app.models.round import Round, RoundStatus
 from app.schemas.match import MatchPublic, MatchCreate
 from app.schemas.result import ResultCreate, SetScore
 from app.services.elo import calculate_elo_change, revert_elo_change
@@ -39,9 +40,12 @@ def _validate_sets(sets: list[SetScore], outcome: str) -> None:
 # --- List ALL matches ---
 @router.get("/", response_model=List[MatchPublic])
 def list_matches(db: Session = Depends(get_db), _=Depends(get_current_user)):
+    current_round = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
+
     matches = (
         db.query(Match)
         .options(joinedload(Match.player1), joinedload(Match.player2), joinedload(Match.winner), joinedload(Match.result))
+        .filter(Match.round == current_round)
         .order_by(Match.scheduled_date.desc())
         .all()
     )
@@ -56,9 +60,12 @@ def list_matches(db: Session = Depends(get_db), _=Depends(get_current_user)):
 # --- Fixtures: upcoming (unplayed) matches only ---
 @router.get("/fixtures", response_model=List[MatchPublic])
 def list_fixtures(db: Session = Depends(get_db), _=Depends(get_current_user)):
+    current_round = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
+
     fixtures = (
         db.query(Match)
         .options(joinedload(Match.player1), joinedload(Match.player2))
+        .filter(Match.round == current_round)
         .filter(Match.status == MatchStatus.SCHEDULED)
         .order_by(Match.scheduled_date.asc())
         .all()
@@ -72,9 +79,12 @@ def list_fixtures(db: Session = Depends(get_db), _=Depends(get_current_user)):
 # --- Results: completed matches only ---
 @router.get("/results", response_model=List[MatchPublic])
 def list_results(db: Session = Depends(get_db), _=Depends(get_current_user)):
+    current_round = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
+
     results = (
         db.query(Match)
         .options(joinedload(Match.player1), joinedload(Match.player2), joinedload(Match.winner), joinedload(Match.result))
+        .filter(Match.round == current_round)
         .filter(Match.status == MatchStatus.COMPLETED.value)
         .order_by(Match.scheduled_date.desc())
         .all()
@@ -116,6 +126,8 @@ def update_match_result(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    current_round = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
+
     match = db.query(Match).filter(Match.id == match_id).first()
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
@@ -128,6 +140,9 @@ def update_match_result(
 
     if set([payload.winner_id, payload.loser_id]) != set([match.player1_id, match.player2_id]):
         raise HTTPException(status_code=400, detail="Winner/loser must be match participants")
+
+    if match.round != current_round:
+        raise HTTPException(status_code=400, detail="Can't update a match after the round is finished")
 
     _validate_sets(payload.sets, payload.outcome)
 
