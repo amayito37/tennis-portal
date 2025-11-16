@@ -16,7 +16,7 @@ export default function Rankings() {
         setPlayers(data);
       } catch (err) {
         console.error("Error fetching ranking:", err);
-        setError("Failed to load player rankings.");
+        setError("Error obteniendo el ranking.");
       } finally {
         setLoading(false);
       }
@@ -31,22 +31,19 @@ export default function Rankings() {
   return (
     <div className="flex flex-col flex-1 p-10 overflow-auto">
       <Header />
-      <h1 className="text-2xl font-bold mb-4">Player Rankings</h1>
+      <h1 className="text-2xl font-bold mb-4">Ranking</h1>
 
       <div className="flex gap-3 mb-4">
         <input
           type="text"
-          placeholder="Search players..."
+          placeholder="Buscar jugadores..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="border rounded-lg px-3 py-2 w-full max-w-md outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
         />
-        <button className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-          Add Match
-        </button>
       </div>
 
-      {loading && <p className="text-gray-500">Loading...</p>}
+      {loading && <p className="text-gray-500">Cargando...</p>}
       {error && <p className="text-red-500">{error}</p>}
       {!loading && !error && <RankingsTable players={filteredPlayers} />}
     </div>

@@ -137,3 +137,11 @@ def finalize_round(round_id: int, db: Session = Depends(get_db), current_user: U
     r.status = RoundStatus.FINALIZED
     db.add(r); db.commit(); db.refresh(r)
     return r
+
+@router.get("/current", response_model=RoundPublic)
+def get_current_round(db: Session = Depends(get_db), _=Depends(get_current_user)):
+    r = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
+    if not r:
+        raise HTTPException(404, "No active round")
+    return r
+

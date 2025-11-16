@@ -29,7 +29,7 @@ export default function Groups() {
   return (
     <div className="flex flex-col flex-1 p-6">
       <Header />
-      <h1 className="text-2xl font-bold mb-6">Groups</h1>
+      <h1 className="text-2xl font-bold mb-6">Grupos</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {ordered.map((g) => (
@@ -42,7 +42,7 @@ export default function Groups() {
                 <h2 className="text-lg font-semibold text-blue-600">{g.name}</h2>
                 {g.id === myGroupId && (
                   <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                    My group
+                    Mi grupo
                   </span>
                 )}
               </div>
@@ -62,7 +62,7 @@ export default function Groups() {
                 </div>
               ) : (
                 <p className="text-gray-400 text-sm italic mt-2">
-                  No players yet
+                  No hay jugadores aún
                 </p>
               )}
             </div>

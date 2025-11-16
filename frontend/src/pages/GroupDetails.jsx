@@ -43,7 +43,7 @@ export default function GroupDetails() {
       <Header />
       <div className="flex items-center gap-3 mb-4">
         <Link to="/groups" className="text-blue-600 hover:underline">
-          ← Back to groups
+          ← Volver a grupos
         </Link>
         {group && <h1 className="text-2xl font-bold">{group.name}</h1>}
       </div>
@@ -51,7 +51,7 @@ export default function GroupDetails() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Players */}
         <div className="bg-white rounded-lg shadow-sm p-4">
-          <h2 className="text-lg font-semibold text-blue-600 mb-3">Players</h2>
+          <h2 className="text-lg font-semibold text-blue-600 mb-3">Jugadores</h2>
           <ul className="divide-y divide-gray-100">
             {players.map((p) => (
               <li key={p.id} className="py-2 flex justify-between">
@@ -63,15 +63,15 @@ export default function GroupDetails() {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-4">
-          <h2 className="text-lg font-semibold text-blue-600 mb-3">Standings</h2>
+          <h2 className="text-lg font-semibold text-blue-600 mb-3">Clasificación</h2>
           <table className="min-w-full text-sm">
             <thead className="bg-gray-100 text-gray-600">
               <tr>
                 <th className="px-3 py-2 text-left">#</th>
-                <th className="px-3 py-2 text-left">Player</th>
-                <th className="px-3 py-2 text-center">Matches</th>
+                <th className="px-3 py-2 text-left">Jugador</th>
+                <th className="px-3 py-2 text-center">Partidos</th>
                 <th className="px-3 py-2 text-center">Sets</th>
-                <th className="px-3 py-2 text-center">Games</th>
+                <th className="px-3 py-2 text-center">Juegos</th>
                 <th className="px-3 py-2 text-center">ELO</th>
               </tr>
             </thead>
@@ -99,15 +99,14 @@ export default function GroupDetails() {
         {fixtures.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm p-4 lg:col-span-2">
             <h2 className="text-lg font-semibold text-blue-600 mb-3">
-              Upcoming Fixtures
+              Partidos pendientes
             </h2>
             <table className="min-w-full text-sm">
               <thead className="bg-gray-100 text-gray-600">
                 <tr>
-                  <th className="px-3 py-2 text-left">Player 1</th>
-                  <th className="px-3 py-2 text-left">Player 2</th>
-                  <th className="px-3 py-2 text-left">Date</th>
-                  <th className="px-3 py-2 text-center">Actions</th>
+                  <th className="px-3 py-2 text-left">Jugador 1</th>
+                  <th className="px-3 py-2 text-left">Jugador 2</th>
+                  <th className="px-3 py-2 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -115,18 +114,13 @@ export default function GroupDetails() {
                   <tr key={f.id} className="border-t">
                     <td className="px-3 py-2">{f.player1.full_name}</td>
                     <td className="px-3 py-2">{f.player2.full_name}</td>
-                    <td className="px-3 py-2 text-gray-500">
-                      {f.scheduled_date
-                        ? new Date(f.scheduled_date).toLocaleDateString()
-                        : "-"}
-                    </td>
                     <td className="px-3 py-2 text-center">
                       {canReport(f) && (
                         <button
                           onClick={() => setSelectedMatch(f)}
                           className="px-2 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
                         >
-                          Report
+                          Añadir resultado
                         </button>
                       )}
                     </td>
@@ -139,19 +133,18 @@ export default function GroupDetails() {
 
         <div className="bg-white rounded-lg shadow-sm p-4 lg:col-span-2">
           <h2 className="text-lg font-semibold text-blue-600 mb-3">
-            Recent Matches
+            Resultados
           </h2>
           {matches.length === 0 ? (
-            <p className="text-gray-500">No matches yet.</p>
+            <p className="text-gray-500">Aún no hay resultados disponibles.</p>
           ) : (
             <table className="min-w-full text-sm">
               <thead className="bg-gray-100 text-gray-600">
                 <tr>
-                  <th className="px-3 py-2 text-left">Player 1</th>
-                  <th className="px-3 py-2 text-left">Player 2</th>
-                  <th className="px-3 py-2">Score</th>
-                  <th className="px-3 py-2">Winner</th>
-                  <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2 text-left">Jugador 1</th>
+                  <th className="px-3 py-2 text-left">Jugador 2</th>
+                  <th className="px-3 py-2">Resultado</th>
+                  <th className="px-3 py-2">Ganador</th>
                 </tr>
               </thead>
               <tbody>
@@ -162,11 +155,6 @@ export default function GroupDetails() {
                     <td className="px-3 py-2 text-center">{m.score || "-"}</td>
                     <td className="px-3 py-2 text-center">
                       {m.winner.full_name || "-"}
-                    </td>
-                    <td className="px-3 py-2 text-gray-500">
-                      {m.scheduled_date
-                        ? new Date(m.scheduled_date).toLocaleDateString()
-                        : "-"}
                     </td>
                   </tr>
                 ))}

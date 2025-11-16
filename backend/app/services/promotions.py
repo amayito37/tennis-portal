@@ -35,7 +35,7 @@ def apply_promotions_for_round(
             # winner up 2? (symmetric relative to bottom): Your spec says “symmetrically for the second to last group”.
             # Interpreting: last group behaves like group 1 mirror; second-to-last behaves like group 2 mirror.
             # In practice: winners go up 2 (general), but near-bottom boundary we ensure no move below bottom.
-            deltas = [ +2, +1, -1, -2 ]
+            deltas = [ +2, +1, 0, -1 ]
         elif gid == bottom:
             # last group: can't go further down; clamp to stay >= bottom
             deltas = [ +2, +1, 0, 0 ]  # losers can't drop past bottom; adjust sensibly
@@ -50,12 +50,15 @@ def apply_promotions_for_round(
             if not user:
                 continue
             from_gid = user.group_id or gid
-            to_gid = from_gid + (-delta if top != 1 else delta)  # if groups are 1..N top=1; keep delta as written
+            to_gid = from_gid + -delta
             # clamp
             to_gid = max(top, min(bottom, to_gid))
-            if to_gid != from_gid:
-                user.group_id = to_gid
-                db.add(user)
+            user.group_id = to_gid
+            old_points = user.points
+            new_points = bottom - to_gid + 1
+            user.points = old_points + new_points
+            db.add(user)
+            if from_gid != to_gid:
                 moves.append((user.id, from_gid, to_gid))
 
     db.commit()

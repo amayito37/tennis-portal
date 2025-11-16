@@ -1,113 +1,126 @@
-from app.db.session import engine, SessionLocal
-from app.db.base import Base
+import random, string
+from app.db.session import SessionLocal
 from app.models.user import User
-from app.models.group import Group
-from app.models.match import Match
-from app.models.match_result import MatchResult
-from app.models.round import Round
 from app.auth.security import get_password_hash
-from datetime import datetime, timedelta
 
+db = SessionLocal()
 
-def seed():
-    # Ensure all tables are created
-    Base.metadata.create_all(bind=engine)
+# Mapping from PDF "Clasificación general 27/06"
+ranking_points = {
+    "Santiago Ortiz": 1221,
+    "Jorge López": 1211,
+    "Yann Kerouredan": 1188,
+    "Jorge Sancho": 1144,
+    "Miguel Ángel García": 1123,
+    "Jorge Scharfhausen": 1112,
+    "Félix López": 1108,
+    "Tania Díaz": 1105,
+    "Ignacio Rivera": 1101,
+    "Álvaro Palacio": 1099,
+    "Miguel de Antonio": 1078,
+    "Eduardo Tejedor": 1078,
+    "Juan Pablo Arévalo": 1073,
+    "Tomás González": 1068,
+    "Carlos Calvo": 1057,
+    "Fernando Sainz": 1057,
+    "Jorge Vidal": 1051,
+    "Jaminson Sarmiento": 1037,
+    "Raúl Varas": 1028,
+    "Samuel Martínez": 1012,
+    "Aurora Graciá": 1011,
+    "Antonio Martínez": 1010,
+    "Isaac Torreblanca": 1010,
+    "Samuel Reyes": 1010,
+    "Ana Bellón": 1005,
+    "Juanjo Bolaños": 995,
+    "Daniel Rodríguez": 994,
+    "Alberto Lambea": 992,
+    "David González": 992,
+    "Elías López": 991,
+    "Ricardo Gómez": 989,
+    "Mayra Lazar": 981,
+    "Daniel Ruiz": 977,
+    "Álvaro Varas": 976,
+    "Raphael Dornard": 976,
+    "Javier Murcia": 974,
+    "Adrián Pérez": 964,
+    "Miguel Bermejo": 959,
+    "Ana María Triguero": 946,
+    "Emiliano Russo": 946,
+    "Iván Fernández": 933,
+    "Ismael Juarez": 930,
+    "Alejandro Carbia": 922,
+    "Adam Kin": 921,
+    "Ciro Annunziata": 913,
+    "Isabel Alemany": 906,
+    "Diego Quesada": 901,
+    "Emanuel Baptista": 896,
+    "Emilio Rivero": 890,
+    "Beatriz Moñino": 883,
+    "Phil Veysey": 863,
+    "Gonzalo Sánchez": 837,
+    "María Fernández": 828,
+    "José Sanseroni": 805,
+    "Paula Gatón": 717,
+}
 
-    db = SessionLocal()
+def random_password(length=9):
+    chars = string.ascii_letters + string.digits
+    return ''.join(random.choices(chars, k=length))
 
-    # Clean old data
-    db.query(MatchResult).delete()
-    db.query(Match).delete()
-    db.query(User).delete()
-    db.query(Group).delete()
-    db.query(Round).delete()
-    db.commit()
+db.query(User).delete()
+db.commit()
 
-    # Create an initial round
-    
-    now = datetime.now()
-    round1 = Round(
-        name="Round 1", 
-        status="ACTIVE",
-        start_date=now,
-        end_date=now + timedelta(days=14),
+groups_data = {
+    1: ["Santiago Ortiz", "Yann Kerouredan", "Jorge Scharfhausen", "Rubén Baquero"],
+    2: ["Juan Pablo Arévalo", "Miguel de Antonio", "Iago Hidalgo", "Jaime Bedia"],
+    3: ["Tomás González", "Jorge Sancho", "Pablo Magán", "Miguel Ángel García"],
+    4: ["Ignacio Rivera", "Borja Ferrer", "Javier Murcia", "Juanjo Bolaños"],
+    5: ["Álvaro Palacio", "María Hernández", "Isabel Harahus", "Antonio Martínez"],
+    6: ["Eduardo Tejedor", "Ricardo Gómez", "Jonathan García", "Carlos Calvo"],
+    7: ["Adam Kin", "Isaac Torreblanca", "Jorge Vidal", "Alejandro Carril"],
+    8: ["Félix López", "Fernando Sainz", "Iván Fernández", "Adrián Pérez"],
+    9: ["Sergi Martín", "Ziqi Deng", "Miguel Bermejo", "Alejandro Rodera"],
+    10: ["José Antonio González", "Daniel Herranz", "Ismael Juarez", "Carlos Poderoso"],
+    11: ["Ana Bellón", "Tania Díaz", "Ignacio Ochoa", "Ciro Annunziata"],
+    12: ["Emanuel Baptista", "Arturo Guevara", "Claudia Riera", "Victoria Fadul"],
+    13: ["Emilio Rivero", "Gonzalo Sánchez", "Beatriz Moñino", "Paula Gatón"],
+}
+
+for group_id, players in groups_data.items():
+    for full_name in players:
+        first, *rest = full_name.split()
+        last = "".join(rest)
+        email = (
+            f"{first}{last}"
+            .replace("ñ", "n").replace("Ñ", "N")
+            .replace("á", "a").replace("é", "e").replace("í", "i")
+            .replace("ó", "o").replace("ú", "u")
+        ).lower()
+        password = random_password()
+        hashed_pw = get_password_hash(password)
+
+        points = ranking_points.get(full_name, 1000)
+
+        u = User(
+            full_name=full_name,
+            email=email,
+            hashed_password=hashed_pw,
+            group_id=group_id,
+            is_admin=False,
+            points=points,
         )
-    db.add(round1)
-    db.commit()
+        db.add(u)
+        print(f"✅ {full_name} ({email}) | pwd: {password} | pts: {points}")
 
-    # Create groups
-    groups = [
-        Group(name="Group A", description="Players in Group A"),
-        Group(name="Group B", description="Players in Group B"),
-        Group(name="Group C", description="Players in Group C"),
-    ]
-    db.add_all(groups)
-    db.commit()
+admin = User(
+    full_name="Admin User",
+    email="admin",
+    hashed_password=get_password_hash("admin123"),
+    is_admin=True,
+    points=0,
+)
+db.add(admin)
 
-    # Create users (exclude admin from groups)
-    users = [
-        User(
-            full_name="Admin User",
-            email="admin@example.com",
-            hashed_password=get_password_hash("admin"),
-            is_admin=True,
-            points=1000,
-        ),
-        User(
-            full_name="John Doe",
-            email="john.doe@test.com",
-            hashed_password=get_password_hash("test"),
-            is_admin=False,
-            points=1000,
-            group_id=groups[0].id,
-        ),
-        User(
-            full_name="Jane Smith",
-            email="jane.smith@test.com",
-            hashed_password=get_password_hash("test"),
-            is_admin=False,
-            points=1000,
-            group_id=groups[0].id,
-        ),
-        User(
-            full_name="Lucas Brown",
-            email="lucas.brown@test.com",
-            hashed_password=get_password_hash("test"),
-            is_admin=False,
-            points=1000,
-            group_id=groups[1].id,
-        ),
-        User(
-            full_name="Samuel Williams",
-            email="samuel.williams@test.com",
-            hashed_password=get_password_hash("test"),
-            is_admin=False,
-            points=1000,
-            group_id=groups[1].id,
-        ),
-        User(
-            full_name="Alex Johnson",
-            email="alex.johnson@test.com",
-            hashed_password=get_password_hash("test"),
-            is_admin=False,
-            points=1000,
-            group_id=groups[2].id,
-        ),
-        User(
-            full_name="Short Pass",
-            email="short@example.com",
-            hashed_password=get_password_hash("test"),
-            is_admin=False,
-            points=1000,
-            group_id=groups[2].id,
-        ),
-    ]
-
-    db.add_all(users)
-    db.commit()
-
-    print("✅ Seeded users, groups, and initial round successfully.")
-
-
-if __name__ == "__main__":
-    seed()
+db.commit()
+print("✅ Users + rankings seeded successfully (including admin).")

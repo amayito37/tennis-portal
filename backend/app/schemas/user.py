@@ -1,8 +1,8 @@
-from pydantic import BaseModel, EmailStr, constr, ConfigDict
+from pydantic import BaseModel, constr, ConfigDict
 from typing import Optional
 
 class UserBase(BaseModel):
-    email: EmailStr
+    email: str | None = None
     full_name: str | None = None
 
 class UserCreate(UserBase):

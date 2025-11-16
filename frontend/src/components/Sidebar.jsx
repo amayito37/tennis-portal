@@ -42,7 +42,7 @@ export default function Sidebar({ open, setOpen }) {
             }`
           }
         >
-          <Menu size={18} /> Dashboard
+          <Menu size={18} /> Inicio
         </NavLink>
 
         <NavLink
@@ -53,7 +53,7 @@ export default function Sidebar({ open, setOpen }) {
             }`
           }
         >
-          <Trophy size={18} /> Matches
+          <Trophy size={18} /> Resultados
         </NavLink>
 
         <NavLink
@@ -64,7 +64,7 @@ export default function Sidebar({ open, setOpen }) {
             }`
           }
         >
-          <Users size={18} /> Groups
+          <Users size={18} /> Grupos
         </NavLink>
 
         <NavLink
@@ -75,7 +75,7 @@ export default function Sidebar({ open, setOpen }) {
             }`
           }
         >
-          <Users size={18} /> Rankings
+          <Users size={18} /> Ranking
         </NavLink>
 
         <NavLink
@@ -86,7 +86,7 @@ export default function Sidebar({ open, setOpen }) {
             }`
           }
         >
-          <Calendar size={18} /> Fixtures
+          <Calendar size={18} /> Partidos
         </NavLink>
 
         <NavLink
@@ -97,7 +97,7 @@ export default function Sidebar({ open, setOpen }) {
             }`
           }
         >
-          <User size={18} /> Profile
+          <User size={18} /> Perfil
         </NavLink>
 
         {/* ✅ Only visible for admins */}
@@ -112,7 +112,7 @@ export default function Sidebar({ open, setOpen }) {
               }`
             }
           >
-            <Calendar size={18} /> Admin Rounds
+            <Calendar size={18} /> Administrar Rondas
           </NavLink>
         )}
       </nav>

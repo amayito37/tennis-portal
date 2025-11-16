@@ -24,7 +24,7 @@ export default function AdminRounds() {
       setError(null);
     } catch (err) {
       console.error(err);
-      setError("Failed to load rounds.");
+      setError("No se han podido cargar las rondas.");
     } finally {
       setLoading(false);
     }
@@ -36,7 +36,7 @@ export default function AdminRounds() {
 
   const handleCreateRound = async () => {
     if (!newRound.name || !newRound.start_date || !newRound.end_date) {
-      alert("Please fill in all fields");
+      alert("Por favor rellena todos los campos");
       return;
     }
     try {
@@ -44,7 +44,7 @@ export default function AdminRounds() {
       setNewRound({ name: "", start_date: "", end_date: "" });
       await fetchRounds();
     } catch (err) {
-      alert("Error creating round: " + (err.response?.data?.detail || err.message));
+      alert("Error creando ronda: " + (err.response?.data?.detail || err.message));
     }
   };
 
@@ -57,7 +57,7 @@ export default function AdminRounds() {
       if (action === "finalize") await api.post(`/rounds/${id}/finalize`);
       await fetchRounds();
     } catch (err) {
-      alert("Error performing action: " + (err.response?.data?.detail || err.message));
+      alert("No se ha podido completar la acción: " + (err.response?.data?.detail || err.message));
     } finally {
       setLoading(false);
     }
@@ -66,11 +66,11 @@ export default function AdminRounds() {
   return (
     <div className="flex flex-col flex-1 p-6 min-h-screen bg-gray-50">
       <Header />
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">🗓️ Round Configuration</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">🗓️ Configuración de ronda</h1>
 
       {/* Create new round */}
       <div className="bg-white p-5 rounded-xl shadow-md mb-8">
-        <h2 className="text-lg font-semibold mb-3 text-gray-700">Create New Round</h2>
+        <h2 className="text-lg font-semibold mb-3 text-gray-700">Crear nueva ronda</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <input
             type="text"
@@ -95,7 +95,7 @@ export default function AdminRounds() {
             onClick={handleCreateRound}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            + Create Round
+            + Crear ronda
           </button>
         </div>
       </div>
@@ -105,18 +105,18 @@ export default function AdminRounds() {
         <table className="min-w-full border-collapse">
           <thead className="bg-gray-100 text-gray-600 uppercase text-sm tracking-wide">
             <tr>
-              <th className="px-4 py-3 text-left">Name</th>
-              <th className="px-4 py-3 text-left">Start</th>
-              <th className="px-4 py-3 text-left">End</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-center">Actions</th>
+              <th className="px-4 py-3 text-left">Nombre</th>
+              <th className="px-4 py-3 text-left">Inicio</th>
+              <th className="px-4 py-3 text-left">Final</th>
+              <th className="px-4 py-3 text-left">Estado</th>
+              <th className="px-4 py-3 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {rounds.length === 0 && (
               <tr>
                 <td colSpan="5" className="text-center py-4 text-gray-500">
-                  No rounds yet
+                  No hay rondas
                 </td>
               </tr>
             )}
@@ -141,24 +141,31 @@ export default function AdminRounds() {
                         : "bg-blue-100 text-blue-700"
                     }`}
                   >
-                    {r.status}
+                    {r.status === "ACTIVE" 
+                        ? "Activa" 
+                        : r.status === "CLOSED"
+                        ? "Cerrada"
+                        : r.status === "FINALIZED"
+                        ? "Finalizada"
+                        : "Borrador" 
+                    }
                   </span>
                 </td>
                 <td className="px-4 py-2 text-right">
-                  <div className="flex flex-wrap gap-2 justify-end">
+                  <div className="flex flex-wrap gap-2 justify-center">
                     {r.status === "DRAFT" && (
                       <>
                         <button
                           onClick={() => handleAction(r.id, "activate")}
                           className="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded text-sm"
                         >
-                          Activate
+                          Activar
                         </button>
                         <button
                           onClick={() => handleAction(r.id, "fixtures")}
                           className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1 rounded text-sm"
                         >
-                          Generate Fixtures
+                          Generar partidos
                         </button>
                       </>
                     )}
@@ -167,7 +174,7 @@ export default function AdminRounds() {
                         onClick={() => handleAction(r.id, "close")}
                         className="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-1 rounded text-sm"
                       >
-                        Close Round
+                        Cerrar ronda
                       </button>
                     )}
                     {r.status === "CLOSED" && (
@@ -176,13 +183,13 @@ export default function AdminRounds() {
                           onClick={() => setReviewRound(r)} // ✅ open modal instead of alert
                           className="bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1 rounded text-sm"
                         >
-                          Review Unplayed
+                          Revisar pendientes
                         </button>
                         <button
                           onClick={() => handleAction(r.id, "finalize")}
                           className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-sm"
                         >
-                          Finalize + Promote
+                          Finalizar y actualizar grupos
                         </button>
                       </>
                     )}
@@ -196,7 +203,7 @@ export default function AdminRounds() {
 
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-white/50 text-lg font-semibold">
-          Loading...
+          Cargando...
         </div>
       )}
 

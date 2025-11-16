@@ -5,9 +5,9 @@ export default function RankingsTable({ players }) {
         <thead className="bg-gray-100 text-gray-600 text-sm uppercase">
           <tr>
             <th className="px-4 py-3">Rank</th>
-            <th className="px-4 py-3">Player</th>
-            <th className="px-4 py-3">Matches</th>
-            <th className="px-4 py-3">Points</th>
+            <th className="px-4 py-3">Jugador</th>
+            <th className="px-4 py-3">Partidos</th>
+            <th className="px-4 py-3">ELO</th>
           </tr>
         </thead>
         <tbody>

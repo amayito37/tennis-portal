@@ -28,11 +28,11 @@ export default function Fixtures() {
     <div className="flex flex-col flex-1 p-6 overflow-auto bg-gray-50 min-h-screen">
       <Header />
       <h1 className="text-2xl font-bold mb-4 text-gray-800">
-        Upcoming Fixtures
+        Partidos pendientes
       </h1>
 
       {fixtures.length === 0 ? (
-        <p className="text-gray-500">No upcoming fixtures.</p>
+        <p className="text-gray-500">No se han encontrado partidos.</p>
       ) : (
         <div className="space-y-3">
           {fixtures.map((f) => (
@@ -46,17 +46,12 @@ export default function Fixtures() {
                 {f.player2?.full_name}
               </div>
               <div className="flex items-center gap-3 text-gray-500 text-sm">
-                <span>
-                  {f.scheduled_date
-                    ? new Date(f.scheduled_date).toLocaleDateString()
-                    : "No date"}
-                </span>
                 {canReport(f) && (
                   <button
                     onClick={() => setSelectedMatch(f)}
                     className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
                   >
-                    Report
+                    Añadir resultado
                   </button>
                 )}
               </div>

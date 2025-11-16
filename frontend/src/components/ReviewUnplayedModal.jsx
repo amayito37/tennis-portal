@@ -30,14 +30,14 @@ export default function ReviewUnplayedModal({ roundId, onClose }) {
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl relative">
         <h2 className="text-lg font-semibold mb-4">
-          Unplayed Matches – Round {roundId}
+          Partidos Pendientes – Ronda {roundId}
         </h2>
 
-        {loading && <p>Loading...</p>}
+        {loading && <p>Cargando...</p>}
         {error && <p className="text-red-600">{error}</p>}
 
         {!loading && matches.length === 0 && (
-          <p className="text-gray-500">No unplayed matches remaining.</p>
+          <p className="text-gray-500">No hay partidos pendientes.</p>
         )}
 
         {!loading && matches.length > 0 && (
@@ -45,10 +45,10 @@ export default function ReviewUnplayedModal({ roundId, onClose }) {
             <table className="w-full text-left border-collapse">
               <thead className="bg-gray-100 text-sm text-gray-600 uppercase">
                 <tr>
-                  <th className="px-4 py-2">Player 1</th>
-                  <th className="px-4 py-2">Player 2</th>
-                  <th className="px-4 py-2">Scheduled Date</th>
-                  <th className="px-4 py-2 text-right">Actions</th>
+                  <th className="px-4 py-2">Jugador 1</th>
+                  <th className="px-4 py-2">Jugador 2</th>
+                  <th className="px-4 py-2">Fecha</th>
+                  <th className="px-4 py-2 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -70,7 +70,7 @@ export default function ReviewUnplayedModal({ roundId, onClose }) {
                         onClick={() => setSelectedMatch(m)}
                         className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-sm"
                       >
-                        Set Result
+                        Añadir resultado
                       </button>
                     </td>
                   </tr>
@@ -85,7 +85,7 @@ export default function ReviewUnplayedModal({ roundId, onClose }) {
             onClick={onClose}
             className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
           >
-            Close
+            Cerrar
           </button>
         </div>
 
