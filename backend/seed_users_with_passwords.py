@@ -113,17 +113,17 @@ for group_id, players in groups_data.items():
         db.add(u)
         print(f"✅ {full_name} ({email}) | pwd: {password} | pts: {points}")
 
-adminPass = get_password_hash(random_password())
+adminPass = random_password())
 
 admin = User(
     full_name="Rubén Almirón",
     email="rubenalmiron",
-    hashed_password=adminPass,
+    hashed_password=get_password_hash(adminPass),
     is_admin=True,
     points=0,
 )
 db.add(admin)
-    print(f"✅ {Rubén Almirón} ({rubenalmiron}) | pwd: {adminPass}")
+print(f"✅ Rubén Almirón (rubenalmiron) | pwd: {adminPass}")
 
 db.commit()
 print("✅ Users + rankings seeded successfully (including admin).")
