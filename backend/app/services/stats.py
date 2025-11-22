@@ -8,6 +8,10 @@ def compute_player_stats(db: Session, player: User):
     For a single player: compute matches/sets/games tallies and percentages.
     Matches: count any match with match.played == True (regardless of outcome).
     Sets/games: counted from result.sets if present.
+    Super tiebreaks:
+      - Count as 1 set
+      - Count toward sets won/lost
+      - DO NOT count their points as games in game tally
     """
 
     current_round = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
@@ -40,19 +44,29 @@ def compute_player_stats(db: Session, player: User):
         for s in sets:
             p1g = s.get("p1_games", 0) or 0
             p2g = s.get("p2_games", 0) or 0
+            is_super_tb = s.get("super_tiebreak", False)
 
+            # Count the set
+            sets_played += 1
+
+            # Determine if player won this set
             if m.player1_id == player.id:
-                games_won += p1g
-                games_played += p1g + p2g
-                sets_played += 1
                 if p1g > p2g:
                     sets_won += 1
             else:
-                games_won += p2g
-                games_played += p1g + p2g
-                sets_played += 1
                 if p2g > p1g:
                     sets_won += 1
+
+            if is_super_tb:
+                continue
+
+            # Games count for NORMAL sets
+            if m.player1_id == player.id:
+                games_won += p1g
+                games_played += (p1g + p2g)
+            else:
+                games_won += p2g
+                games_played += (p1g + p2g)
 
     win_pct  = round((mw / mp) * 100, 1) if mp else 0.0
     set_pct  = round((sets_won / sets_played) * 100, 1) if sets_played else 0.0
