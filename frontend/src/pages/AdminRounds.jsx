@@ -73,8 +73,8 @@ export default function AdminRounds() {
         <h2 className="text-lg font-semibold mb-3 text-gray-700">Crear nueva ronda</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <input
-            type="text"
-            placeholder="Round Name"
+            type="number"
+            placeholder="Número de ronda"
             value={newRound.name}
             onChange={(e) => setNewRound({ ...newRound, name: e.target.value })}
             className="border rounded p-2"
