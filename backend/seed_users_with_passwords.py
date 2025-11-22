@@ -113,7 +113,7 @@ for group_id, players in groups_data.items():
         db.add(u)
         print(f"✅ {full_name} ({email}) | pwd: {password} | pts: {points}")
 
-adminPass = random_password())
+adminPass = random_password()
 
 admin = User(
     full_name="Rubén Almirón",
