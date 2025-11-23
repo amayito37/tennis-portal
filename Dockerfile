@@ -6,7 +6,7 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1
 
 # Set working directory
-WORKDIR /backend/app
+WORKDIR /app
 
 # Install system dependencies (psycopg2 needs this)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -27,4 +27,4 @@ COPY . .
 EXPOSE 1000
 
 # Default command to run your app
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "1000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "1000", "--app-dir", "backend"]
