@@ -21,7 +21,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy your whole backend into the container
-COPY . .
+COPY /backend /backend
 
 # Expose port for Uvicorn
 EXPOSE 1000
