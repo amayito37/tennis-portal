@@ -6,7 +6,7 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1
 
 # Set working directory
-WORKDIR /app
+WORKDIR /backend/app
 
 # Install system dependencies (psycopg2 needs this)
 RUN apt-get update && apt-get install -y --no-install-recommends \
