@@ -17,7 +17,7 @@ primary_region = 'iad'
   processes = ['app']
 
 [[services]]
-  internal_port = 8000
+  internal_port = 1000
   processes = ["app"]
   protocol = "tcp"
   auto_stop_machines = true
