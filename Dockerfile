@@ -1,30 +1,24 @@
-# Dockerfile
+# Use slim Python image
+FROM python:3.12-slim
 
-FROM python:3.11-slim
+# Prevent Python from writing .pyc files
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# Prevent Python from buffering output
-ENV PYTHONUNBUFFERED=1
+# Create the app directory
+WORKDIR /app/backend
 
-# Set working directory
-WORKDIR /app
+# Install system deps
+RUN apt-get update && apt-get install -y build-essential && apt-get clean
 
-# Install system dependencies (psycopg2 needs this)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Copy backend folder
+COPY backend /app/backend
 
-# Copy requirements first (for caching)
-COPY requirements.txt .
-
-# Install Python dependencies
+# Install requirements
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy your whole backend into the container
-COPY /backend /backend
-
-# Expose port for Uvicorn
+# Expose Fly.io port
 EXPOSE 1000
 
-# Default command to run your app
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "1000", "--app-dir", "backend"]
+# Run FastAPI app
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "1000"]
