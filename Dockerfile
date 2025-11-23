@@ -21,4 +21,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 1000
 
 # Run FastAPI app
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "1000", "--proxy-headers", "--forwarded-allow-ips"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "1000", "--proxy-headers", "--forwarded-allow-ips", "*"]
