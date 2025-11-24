@@ -5,6 +5,7 @@ from app.auth.security import get_db, get_current_user
 from app.models.group import Group
 from app.models.user import User
 from app.models.match import Match, MatchStatus
+from app.models.round import Round, RoundStatus
 from app.schemas.match import MatchPublic
 from app.routers.matches import _format_score
 from app.services.stats import compute_player_stats
