@@ -66,13 +66,15 @@ def list_group_players(group_id: int, db: Session = Depends(get_db), _=Depends(g
 @router.get("/{group_id}/matches", response_model=List[MatchPublic])
 def list_group_matches(group_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
     # Only matches where both players are in this group
+    current_round = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
+
     ids = [u.id for u in db.query(User.id).filter(User.group_id == group_id).all()]
     if not ids:
         return []
     matches = (
         db.query(Match)
         .options(joinedload(Match.player1), joinedload(Match.player2))
-        .filter(Match.player1_id.in_(ids), Match.player2_id.in_(ids), Match.played == True)
+        .filter(Match.player1_id.in_(ids), Match.player2_id.in_(ids), Match.played == True, Match.round == current_round)
         .order_by(Match.scheduled_date.desc())
         .all()
     )
@@ -89,6 +91,8 @@ def list_group_fixtures(group_id: int, db: Session = Depends(get_db), _=Depends(
     from app.models.user import User
     from app.models.match import Match
 
+    current_round = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
+
     # Get all players in the group
     players = db.query(User).filter(User.group_id == group_id).all()
     player_ids = [p.id for p in players]
@@ -101,6 +105,7 @@ def list_group_fixtures(group_id: int, db: Session = Depends(get_db), _=Depends(
             Match.played == False,
             Match.player1_id.in_(player_ids),
             Match.player2_id.in_(player_ids),
+            Match.round == current_round
         )
         .all()
     )
