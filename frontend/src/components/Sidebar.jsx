@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, Users, Trophy, Calendar, User } from "lucide-react";
+import { Menu, Users, Trophy, Calendar, User, Medal, NotebookTabs } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { apiGet } from "../services/api";
 
@@ -71,7 +71,7 @@ export default function Sidebar({ open, setOpen }) {
         <MobileNavItem to="/" icon={Menu}>Inicio</MobileNavItem>
         <MobileNavItem to="/matches" icon={Trophy}>Resultados</MobileNavItem>
         <MobileNavItem to="/groups" icon={Users}>Grupos</MobileNavItem>
-        <MobileNavItem to="/rankings" icon={Users}>Ranking</MobileNavItem>
+        <MobileNavItem to="/rankings" icon={Medal}>Ranking</MobileNavItem>
         <MobileNavItem to="/fixtures" icon={Calendar}>Partidos</MobileNavItem>
         <MobileNavItem to="/profile" icon={User}>Perfil</MobileNavItem>
 
@@ -87,7 +87,7 @@ export default function Sidebar({ open, setOpen }) {
               }`
             }
           >
-            <Calendar size={18} /> Administrar Rondas
+            <NotebookTabs size={18} /> Administrar Rondas
           </NavLink>
         )}
       </nav>
