@@ -141,7 +141,7 @@ def update_match_result(
     if set([payload.winner_id, payload.loser_id]) != set([match.player1_id, match.player2_id]):
         raise HTTPException(status_code=400, detail="Winner/loser must be match participants")
 
-    if match.round != current_round:
+    if match.round != current_round and not current_user.is_admin:
         raise HTTPException(status_code=400, detail="Can't update a match after the round is finished")
 
     _validate_sets(payload.sets, payload.outcome)
