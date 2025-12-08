@@ -10,24 +10,6 @@ const OUTCOME_LABELS = {
   ADMIN_DECISION: "Decisión administrativa",
 };
 
-
-// ----------------------------
-// Helper: normalize sets so p1 is always winner column
-// ----------------------------
-const normalizeSets = (rawSets, winnerIsP1) =>
-  rawSets.map((s) => {
-    if (winnerIsP1) return { ...s };
-
-    // Swap values: p1 becomes p2 and vice versa
-    return {
-      p1_games: s.p2_games,
-      p2_games: s.p1_games,
-      p1_tiebreak: s.p2_tiebreak,
-      p2_tiebreak: s.p1_tiebreak,
-      super_tiebreak: s.super_tiebreak,
-    };
-  });
-
 export default function ReportResultModal({
   match,
   me,
@@ -43,16 +25,14 @@ export default function ReportResultModal({
   const [loading, setLoading] = useState(false);
 
   // ----------------------------
-  // Load edit mode
+  // Load edit mode (keep sets in backend format: p1 = player1, p2 = player2)
   // ----------------------------
   useEffect(() => {
     if (isEditMode && match.result) {
-      const winnerIsP1 = match.result.winner_id === match.player1.id;
-
       setWinnerId(match.result.winner_id);
       setOutcome(match.result.outcome || "COMPLETED");
 
-      const rawSets = match.result.sets?.length
+      const existingSets = match.result.sets?.length
         ? match.result.sets.map((s) => ({
             p1_games: s.p1_games,
             p2_games: s.p2_games,
@@ -62,54 +42,50 @@ export default function ReportResultModal({
           }))
         : [{ p1_games: 6, p2_games: 3, super_tiebreak: false }];
 
-      setSets(normalizeSets(rawSets, winnerIsP1));
+      setSets(existingSets);
     }
   }, [isEditMode, match.result]);
 
-  // ----------------------------
-  // Reorder sets when winner changes
-  // ----------------------------
-  useEffect(() => {
-    if (!winnerId) return;
-
-    const winnerIsP1 = winnerId === match.player1.id;
-    setSets((prev) => normalizeSets(prev, winnerIsP1));
-  }, [winnerId]);
-
   const addSet = () =>
-    setSets([...sets, { p1_games: 6, p2_games: 3, super_tiebreak: false }]);
+    setSets((prev) => [
+      ...prev,
+      { p1_games: 6, p2_games: 3, super_tiebreak: false },
+    ]);
 
-  const removeSet = (i) => setSets(sets.filter((_, idx) => idx !== i));
+  const removeSet = (i) =>
+    setSets((prev) => prev.filter((_, idx) => idx !== i));
 
   const updateSet = (i, key, val) =>
-    setSets(sets.map((s, idx) => (idx === i ? { ...s, [key]: val } : s)));
+    setSets((prev) =>
+      prev.map((s, idx) => (idx === i ? { ...s, [key]: val } : s))
+    );
 
   // ----------------------------
-  // Submit
+  // Submit (send always in backend perspective: p1 = player1, p2 = player2)
   // ----------------------------
   const handleSubmit = async () => {
     if (!winnerId) return;
     setLoading(true);
 
     const loserId =
-      match.player1.id === winnerId
-        ? match.player2.id
-        : match.player1.id;
+      match.player1.id === winnerId ? match.player2.id : match.player1.id;
+
+    const payloadSets =
+      outcome === "COMPLETED"
+        ? sets.map((s) => ({
+            p1_games: Number(s.p1_games),
+            p2_games: Number(s.p2_games),
+            p1_tiebreak: s.p1_tiebreak ? Number(s.p1_tiebreak) : null,
+            p2_tiebreak: s.p2_tiebreak ? Number(s.p2_tiebreak) : null,
+            super_tiebreak: Boolean(s.super_tiebreak),
+          }))
+        : [];
 
     const body = {
       winner_id: winnerId,
       loser_id: loserId,
       outcome,
-      sets:
-        outcome === "COMPLETED"
-          ? sets.map((s) => ({
-              p1_games: Number(s.p1_games),
-              p2_games: Number(s.p2_games),
-              p1_tiebreak: s.p1_tiebreak ? Number(s.p1_tiebreak) : null,
-              p2_tiebreak: s.p2_tiebreak ? Number(s.p2_tiebreak) : null,
-              super_tiebreak: Boolean(s.super_tiebreak),
-            }))
-          : [],
+      sets: payloadSets,
     };
 
     try {
@@ -158,6 +134,11 @@ export default function ReportResultModal({
       ? match.player1.full_name
       : "Perdedor";
 
+  // For UI mapping (only affects which column shows which underlying field)
+  const winnerIsP1 = winnerId
+    ? winnerId === match.player1.id
+    : true;
+
   // ----------------------------
   // RENDER
   // ----------------------------
@@ -186,32 +167,34 @@ export default function ReportResultModal({
           Resultado
         </label>
         <select
-        value={outcome}
-        onChange={(e) => setOutcome(e.target.value)}
-        className="w-full border rounded p-2 mb-4"
+          value={outcome}
+          onChange={(e) => setOutcome(e.target.value)}
+          className="w-full border rounded p-2 mb-4"
         >
-        {(me?.is_admin ? OUTCOMES : OUTCOMES.filter(o => o !== "ADMIN_DECISION"))
-            .map((o) => (
+          {(me?.is_admin
+            ? OUTCOMES
+            : OUTCOMES.filter((o) => o !== "ADMIN_DECISION")
+          ).map((o) => (
             <option key={o} value={o}>
-                {OUTCOME_LABELS[o]}
+              {OUTCOME_LABELS[o]}
             </option>
-            ))}
+          ))}
         </select>
 
         {outcome === "COMPLETED" && (
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
-                <h3 className="font-medium">Sets</h3>
+              <h3 className="font-medium">Sets</h3>
 
-                {/* Hide add button once 3 sets exist */}
-                {sets.length < 3 && (
-                    <button
-                    onClick={addSet}
-                    className="text-sm bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
-                    >
-                    + Añadir
-                    </button>
-                )}
+              {/* Hide add button once 3 sets exist */}
+              {sets.length < 3 && (
+                <button
+                  onClick={addSet}
+                  className="text-sm bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded"
+                >
+                  + Añadir
+                </button>
+              )}
             </div>
 
             {/* Column labels */}
@@ -227,58 +210,76 @@ export default function ReportResultModal({
               </div>
             </div>
 
-            {sets.map((s, i) => (
-              <div key={i} className="grid grid-cols-12 gap-2 items-center mb-2">
-                {/* Winner column */}
-                <input
-                    type="number"
-                    min="0"
-                    max={s.super_tiebreak ? 10 : 7}
-                    className="col-span-2 border rounded p-2"
-                    value={s.p1_games}
-                    onChange={(e) =>
-                        updateSet(i, "p1_games", e.target.value)
-                    }
-                />
+            {sets.map((s, i) => {
+              // Map underlying p1/p2 to winner/loser columns for UI
+              const winnerGames = winnerIsP1 ? s.p1_games : s.p2_games;
+              const loserGames = winnerIsP1 ? s.p2_games : s.p1_games;
 
-
-                <span className="col-span-1 text-center">-</span>
-
-                {/* Loser column */}
-                <input
-                    type="number"
-                    min="0"
-                    max={s.super_tiebreak ? 10 : 7}
-                    className="col-span-2 border rounded p-2"
-                    value={s.p2_games}
-                    onChange={(e) =>
-                        updateSet(i, "p2_games", e.target.value)
-                    }
-                />
-
-                {i === 2 ? (
-                <label className="col-span-4 flex items-center gap-2 text-sm">
-                    <input
-                    type="checkbox"
-                    checked={s.super_tiebreak}
-                    onChange={(e) =>
-                        updateSet(i, "super_tiebreak", e.target.checked)
-                    }
-                    />
-                    Super TB
-                </label>
-                ) : (
-                <div className="col-span-4" />  // keep layout aligned
-                )}
-
-                <button
-                  onClick={() => removeSet(i)}
-                  className="col-span-2 text-red-500"
+              return (
+                <div
+                  key={i}
+                  className="grid grid-cols-12 gap-2 items-center mb-2"
                 >
-                  ✕
-                </button>
-              </div>
-            ))}
+                  {/* Winner column */}
+                  <input
+                    type="number"
+                    min="0"
+                    max={s.super_tiebreak ? 10 : 7}
+                    className="col-span-2 border rounded p-2"
+                    value={winnerGames}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (winnerIsP1) {
+                        updateSet(i, "p1_games", val);
+                      } else {
+                        updateSet(i, "p2_games", val);
+                      }
+                    }}
+                  />
+
+                  <span className="col-span-1 text-center">-</span>
+
+                  {/* Loser column */}
+                  <input
+                    type="number"
+                    min="0"
+                    max={s.super_tiebreak ? 10 : 7}
+                    className="col-span-2 border rounded p-2"
+                    value={loserGames}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (winnerIsP1) {
+                        updateSet(i, "p2_games", val);
+                      } else {
+                        updateSet(i, "p1_games", val);
+                      }
+                    }}
+                  />
+
+                  {i === 2 ? (
+                    <label className="col-span-4 flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={s.super_tiebreak}
+                        onChange={(e) =>
+                          updateSet(i, "super_tiebreak", e.target.checked)
+                        }
+                      />
+                      Super TB
+                    </label>
+                  ) : (
+                    <div className="col-span-4" />
+                  )}
+
+                  <button
+                    onClick={() => removeSet(i)}
+                    className="col-span-2 text-red-500"
+                  >
+                    ✕
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -292,15 +293,18 @@ export default function ReportResultModal({
           <button
             disabled={!winnerId || loading}
             onClick={handleSubmit}
-            className={`px-3 py-1 rounded text-white
-                ${!winnerId || loading
+            className={`px-3 py-1 rounded text-white ${
+              !winnerId || loading
                 ? "bg-gray-300 cursor-not-allowed opacity-60"
                 : "bg-blue-600 hover:bg-blue-700"
-                }`}
-            >
-            {loading ? "Guardando..." : isEditMode ? "Guardar cambios" : "Confirmar"}
+            }`}
+          >
+            {loading
+              ? "Guardando..."
+              : isEditMode
+              ? "Guardar cambios"
+              : "Confirmar"}
           </button>
-
         </div>
       </div>
     </div>
