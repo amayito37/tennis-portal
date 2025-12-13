@@ -13,7 +13,7 @@ export default function AdminRounds() {
     end_date: "",
   });
 
-  // ✅ new: track round being reviewed
+  // ✅ track round being reviewed
   const [reviewRound, setReviewRound] = useState(null);
 
   const fetchRounds = async () => {
@@ -44,20 +44,32 @@ export default function AdminRounds() {
       setNewRound({ name: "", start_date: "", end_date: "" });
       await fetchRounds();
     } catch (err) {
-      alert("Error creando ronda: " + (err.response?.data?.detail || err.message));
+      alert(
+        "Error creando ronda: " +
+          (err.response?.data?.detail || err.message)
+      );
     }
   };
 
   const handleAction = async (id, action) => {
     try {
       setLoading(true);
-      if (action === "activate") await api.post(`/rounds/${id}/activate`);
-      if (action === "fixtures") await api.post(`/rounds/${id}/generate-fixtures`);
+
+      if (action === "init") {
+        // ✅ New: generate fixtures + activate in one click
+        await api.post(`/rounds/${id}/generate-fixtures`);
+        await api.post(`/rounds/${id}/activate`);
+      }
+
       if (action === "close") await api.post(`/rounds/${id}/close`);
       if (action === "finalize") await api.post(`/rounds/${id}/finalize`);
+
       await fetchRounds();
     } catch (err) {
-      alert("No se ha podido completar la acción: " + (err.response?.data?.detail || err.message));
+      alert(
+        "No se ha podido completar la acción: " +
+          (err.response?.data?.detail || err.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -66,29 +78,39 @@ export default function AdminRounds() {
   return (
     <div className="flex flex-col flex-1 p-6 min-h-screen bg-gray-50">
       <Header />
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">🗓️ Configuración de ronda</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">
+        🗓️ Configuración de ronda
+      </h1>
 
       {/* Create new round */}
       <div className="bg-white p-5 rounded-xl shadow-md mb-8">
-        <h2 className="text-lg font-semibold mb-3 text-gray-700">Crear nueva ronda</h2>
+        <h2 className="text-lg font-semibold mb-3 text-gray-700">
+          Crear nueva ronda
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <input
             type="number"
             placeholder="Número de ronda"
             value={newRound.name}
-            onChange={(e) => setNewRound({ ...newRound, name: e.target.value })}
+            onChange={(e) =>
+              setNewRound({ ...newRound, name: e.target.value })
+            }
             className="border rounded p-2"
           />
           <input
             type="datetime-local"
             value={newRound.start_date}
-            onChange={(e) => setNewRound({ ...newRound, start_date: e.target.value })}
+            onChange={(e) =>
+              setNewRound({ ...newRound, start_date: e.target.value })
+            }
             className="border rounded p-2"
           />
           <input
             type="datetime-local"
             value={newRound.end_date}
-            onChange={(e) => setNewRound({ ...newRound, end_date: e.target.value })}
+            onChange={(e) =>
+              setNewRound({ ...newRound, end_date: e.target.value })
+            }
             className="border rounded p-2"
           />
           <button
@@ -115,14 +137,22 @@ export default function AdminRounds() {
           <tbody>
             {rounds.length === 0 && (
               <tr>
-                <td colSpan="5" className="text-center py-4 text-gray-500">
+                <td
+                  colSpan="5"
+                  className="text-center py-4 text-gray-500"
+                >
                   No hay rondas
                 </td>
               </tr>
             )}
             {rounds.map((r) => (
-              <tr key={r.id} className="border-t hover:bg-blue-50 transition">
-                <td className="px-4 py-2 font-medium text-gray-800">{r.name}</td>
+              <tr
+                key={r.id}
+                className="border-t hover:bg-blue-50 transition"
+              >
+                <td className="px-4 py-2 font-medium text-gray-800">
+                  {r.name}
+                </td>
                 <td className="px-4 py-2 text-gray-600">
                   {new Date(r.start_date).toLocaleString()}
                 </td>
@@ -141,34 +171,26 @@ export default function AdminRounds() {
                         : "bg-blue-100 text-blue-700"
                     }`}
                   >
-                    {r.status === "ACTIVE" 
-                        ? "Activa" 
-                        : r.status === "CLOSED"
-                        ? "Cerrada"
-                        : r.status === "FINALIZED"
-                        ? "Finalizada"
-                        : "Borrador" 
-                    }
+                    {r.status === "ACTIVE"
+                      ? "Activa"
+                      : r.status === "CLOSED"
+                      ? "Cerrada"
+                      : r.status === "FINALIZED"
+                      ? "Finalizada"
+                      : "Borrador"}
                   </span>
                 </td>
                 <td className="px-4 py-2 text-right">
                   <div className="flex flex-wrap gap-2 justify-center">
                     {r.status === "DRAFT" && (
-                      <>
-                        <button
-                          onClick={() => handleAction(r.id, "activate")}
-                          className="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded text-sm"
-                        >
-                          Activar
-                        </button>
-                        <button
-                          onClick={() => handleAction(r.id, "fixtures")}
-                          className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1 rounded text-sm"
-                        >
-                          Generar partidos
-                        </button>
-                      </>
+                      <button
+                        onClick={() => handleAction(r.id, "init")}
+                        className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1 rounded text-sm"
+                      >
+                        Generar partidos y activar
+                      </button>
                     )}
+
                     {r.status === "ACTIVE" && (
                       <button
                         onClick={() => handleAction(r.id, "close")}
@@ -177,16 +199,19 @@ export default function AdminRounds() {
                         Cerrar ronda
                       </button>
                     )}
+
                     {r.status === "CLOSED" && (
                       <>
                         <button
-                          onClick={() => setReviewRound(r)} // ✅ open modal instead of alert
+                          onClick={() => setReviewRound(r)}
                           className="bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-1 rounded text-sm"
                         >
                           Revisar pendientes
                         </button>
                         <button
-                          onClick={() => handleAction(r.id, "finalize")}
+                          onClick={() =>
+                            handleAction(r.id, "finalize")
+                          }
                           className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-sm"
                         >
                           Finalizar y actualizar grupos
@@ -207,7 +232,7 @@ export default function AdminRounds() {
         </div>
       )}
 
-      {/* ✅ new modal for reviewing unplayed matches */}
+      {/* modal for reviewing unplayed matches */}
       {reviewRound && (
         <ReviewUnplayedModal
           roundId={reviewRound.id}
