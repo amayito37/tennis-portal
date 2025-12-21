@@ -10,6 +10,16 @@ const OUTCOME_LABELS = {
   ADMIN_DECISION: "Decisión administrativa",
 };
 
+// Clamp any input to valid range
+const clampGames = (value, isSuperTB) => {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 0;
+  const max = isSuperTB ? 10 : 7;
+  if (num < 0) return 0;
+  if (num > max) return max;
+  return num;
+};
+
 export default function ReportResultModal({
   match,
   me,
@@ -66,6 +76,29 @@ export default function ReportResultModal({
   const handleSubmit = async () => {
     if (!winnerId) return;
     setLoading(true);
+
+    // Extra safety: validate all sets before sending
+    for (const s of sets) {
+      const max = s.super_tiebreak ? 10 : 7;
+      const p1 = Number(s.p1_games);
+      const p2 = Number(s.p2_games);
+      if (
+        !Number.isInteger(p1) ||
+        !Number.isInteger(p2) ||
+        p1 < 0 ||
+        p2 < 0 ||
+        p1 > max ||
+        p2 > max
+      ) {
+        alert(
+          "Revisa los juegos de cada set. Deben estar entre 0 y " +
+            max +
+            (s.super_tiebreak ? " (super tie-break)." : ".")
+        );
+        setLoading(false);
+        return;
+      }
+    }
 
     const loserId =
       match.player1.id === winnerId ? match.player2.id : match.player1.id;
@@ -135,9 +168,7 @@ export default function ReportResultModal({
       : "Perdedor";
 
   // For UI mapping (only affects which column shows which underlying field)
-  const winnerIsP1 = winnerId
-    ? winnerId === match.player1.id
-    : true;
+  const winnerIsP1 = winnerId ? winnerId === match.player1.id : true;
 
   // ----------------------------
   // RENDER
@@ -228,11 +259,14 @@ export default function ReportResultModal({
                     className="col-span-2 border rounded p-2"
                     value={winnerGames}
                     onChange={(e) => {
-                      const val = e.target.value;
+                      const clamped = clampGames(
+                        e.target.value,
+                        s.super_tiebreak
+                      );
                       if (winnerIsP1) {
-                        updateSet(i, "p1_games", val);
+                        updateSet(i, "p1_games", clamped);
                       } else {
-                        updateSet(i, "p2_games", val);
+                        updateSet(i, "p2_games", clamped);
                       }
                     }}
                   />
@@ -247,11 +281,14 @@ export default function ReportResultModal({
                     className="col-span-2 border rounded p-2"
                     value={loserGames}
                     onChange={(e) => {
-                      const val = e.target.value;
+                      const clamped = clampGames(
+                        e.target.value,
+                        s.super_tiebreak
+                      );
                       if (winnerIsP1) {
-                        updateSet(i, "p2_games", val);
+                        updateSet(i, "p2_games", clamped);
                       } else {
-                        updateSet(i, "p1_games", val);
+                        updateSet(i, "p1_games", clamped);
                       }
                     }}
                   />
@@ -262,7 +299,19 @@ export default function ReportResultModal({
                         type="checkbox"
                         checked={s.super_tiebreak}
                         onChange={(e) =>
-                          updateSet(i, "super_tiebreak", e.target.checked)
+                          setSets((prev) =>
+                            prev.map((set, idx) => {
+                              if (idx !== i) return set;
+                              const checked = e.target.checked;
+                              const max = checked ? 10 : 7;
+                              return {
+                                ...set,
+                                super_tiebreak: checked,
+                                p1_games: Math.min(set.p1_games, max),
+                                p2_games: Math.min(set.p2_games, max),
+                              };
+                            })
+                          )
                         }
                       />
                       Super TB
