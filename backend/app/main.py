@@ -15,7 +15,7 @@ default_origins = [
     "http://127.0.0.1:5173",
 ]
 
-allow_origin_regex = r"https://.*\.netlify\.app"
+allow_origin_regex = r"^https://.*\.netlify\.app$|^https://(www\.)?rankingcta\.com$"
 
 allow_origins = default_origins
 if CORS_ORIGINS:
