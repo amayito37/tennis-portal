@@ -11,6 +11,12 @@ from app.models.match import Match, MatchStatus
 from app.schemas.round import RoundCreate, RoundPublic
 from app.services.standings import compute_group_table_for_round
 from app.services.promotions import apply_promotions_for_round
+from app.services.round_memberships import (
+    get_round_group_players,
+    round_has_memberships,
+    snapshot_round_memberships,
+    update_round_membership_points_at_end,
+)
 
 router = APIRouter(tags=["rounds"])
 
@@ -51,16 +57,13 @@ def generate_fixtures(round_id: int, db: Session = Depends(get_db), current_user
     if r.status not in (RoundStatus.DRAFT, RoundStatus.ACTIVE):
         raise HTTPException(400, "Round not in DRAFT/ACTIVE")
 
+    snapshot_round_memberships(db, round_id)
+
     groups = db.query(Group).order_by(Group.id).all()
     created = 0
 
     for g in groups:
-        players = (
-            db.query(User)
-            .filter(User.group_id == g.id, User.is_admin == False)
-            .order_by(User.id)
-            .all()
-        )
+        players = get_round_group_players(db, g.id, round_id)
         # simple round-robin once: every pair plays once
         for i in range(len(players)):
             for j in range(i+1, len(players)):
@@ -127,12 +130,16 @@ def finalize_round(round_id: int, db: Session = Depends(get_db), current_user: U
     if r.status != RoundStatus.CLOSED:
         raise HTTPException(400, "Round must be CLOSED before finalizing")
 
+    if not round_has_memberships(db, round_id):
+        snapshot_round_memberships(db, round_id)
+
     standings_by_group = {}
     groups = db.query(Group).order_by(Group.id).all()
     for g in groups:
         standings_by_group[g.id] = compute_group_table_for_round(db, g.id, round_id)
 
     apply_promotions_for_round(db, standings_by_group)
+    update_round_membership_points_at_end(db, round_id)
 
     r.status = RoundStatus.FINALIZED
     db.add(r); db.commit(); db.refresh(r)
@@ -144,4 +151,3 @@ def get_current_round(db: Session = Depends(get_db), _=Depends(get_current_user)
     if not r:
         raise HTTPException(404, "No active round")
     return r
-

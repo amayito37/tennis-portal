@@ -49,7 +49,7 @@ def apply_promotions_for_round(
             user = db.query(User).get(row["player_id"])
             if not user:
                 continue
-            from_gid = user.group_id or gid
+            from_gid = gid
             to_gid = from_gid + -delta
             # clamp
             to_gid = max(top, min(bottom, to_gid))

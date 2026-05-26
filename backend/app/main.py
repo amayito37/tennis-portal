@@ -7,6 +7,7 @@ from app.db.session import engine
 from app.db.base import Base
 from app.models import user as _user_model  
 from app.models import match as _match_model
+from app.models import round_group_membership as _round_group_membership_model
 
 app = FastAPI(title="Tennis Ranking API", version="1.0.0")
 

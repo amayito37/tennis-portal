@@ -82,6 +82,8 @@ export default function AdminRounds() {
         🗓️ Configuración de ronda
       </h1>
 
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+
       {/* Create new round */}
       <div className="bg-white p-5 rounded-xl shadow-md mb-8">
         <h2 className="text-lg font-semibold mb-3 text-gray-700">

@@ -90,6 +90,22 @@ export default function Sidebar({ open, setOpen }) {
             <NotebookTabs size={18} /> Administrar Rondas
           </NavLink>
         )}
+
+        {me?.is_admin && (
+          <NavLink
+            to="/admin/group-rounds"
+            onClick={closeOnMobile}
+            className={({ isActive }) =>
+              `flex items-center gap-3 p-2 rounded-md transition ${
+                isActive
+                  ? "bg-purple-100 text-purple-700 font-semibold"
+                  : "hover:bg-gray-100 text-purple-700"
+              }`
+            }
+          >
+            <NotebookTabs size={18} /> Ver rondas anteriores
+          </NavLink>
+        )}
       </nav>
 
       <div className="mt-auto flex items-center justify-center p-6">
