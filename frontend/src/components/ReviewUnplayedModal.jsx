@@ -9,22 +9,32 @@ export default function ReviewUnplayedModal({ roundId, onClose }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await api.get(`/rounds/${roundId}/unplayed`);
-        const list = res?.data ?? res;
-        setMatches(Array.isArray(list) ? list : []);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load unplayed matches.");
-      } finally {
-        setLoading(false);
-      }
-    }
     load();
   }, [roundId]);
+
+  async function load() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get(`/rounds/${roundId}/unplayed`);
+      const list = res?.data ?? res;
+      setMatches(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load unplayed matches.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function restoreMatch(matchId) {
+    try {
+      await api.patch(`/matches/${matchId}/status`, { status: "SCHEDULED" });
+      await load();
+    } catch (err) {
+      alert(err.response?.data?.detail || err.message);
+    }
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -48,6 +58,7 @@ export default function ReviewUnplayedModal({ roundId, onClose }) {
                   <th className="px-4 py-2">Jugador 1</th>
                   <th className="px-4 py-2">Jugador 2</th>
                   <th className="px-4 py-2">Fecha</th>
+                  <th className="px-4 py-2">Estado</th>
                   <th className="px-4 py-2 text-right">Acciones</th>
                 </tr>
               </thead>
@@ -65,13 +76,34 @@ export default function ReviewUnplayedModal({ roundId, onClose }) {
                           })
                         : "-"}
                     </td>
-                    <td className="px-4 py-2 text-right">
-                      <button
-                        onClick={() => setSelectedMatch(m)}
-                        className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-sm"
+                    <td className="px-4 py-2">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                          m.status === "CANCELLED"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
                       >
-                        Añadir resultado
-                      </button>
+                        {m.status === "CANCELLED" ? "Cancelado" : "Pendiente"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-right">
+                      <div className="flex justify-end gap-2">
+                        {m.status === "CANCELLED" && (
+                          <button
+                            onClick={() => restoreMatch(m.id)}
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm"
+                          >
+                            Restaurar
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setSelectedMatch(m)}
+                          className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-sm"
+                        >
+                          Añadir resultado
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -95,8 +127,7 @@ export default function ReviewUnplayedModal({ roundId, onClose }) {
             me={{ is_admin: true }}
             onClose={() => setSelectedMatch(null)}
             onSuccess={() => {
-              // Refresh list after submitting a result
-              setMatches(matches.filter((m) => m.id !== selectedMatch.id));
+              load();
               setSelectedMatch(null);
             }}
             isEditMode={false}

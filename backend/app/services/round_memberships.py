@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.round_group_membership import RoundGroupMembership
 from app.models.user import User
+from app.services.player_lifecycle import apply_pending_player_statuses
 
 
 def round_has_memberships(db: Session, round_id: int) -> bool:
@@ -20,6 +21,9 @@ def snapshot_round_memberships(db: Session, round_id: int) -> int:
     Additive, idempotent snapshot of current groups for a round.
     Existing rows are left untouched so historical data is not overwritten.
     """
+    if not round_has_memberships(db, round_id):
+        apply_pending_player_statuses(db, round_id)
+
     existing_user_ids = {
         row[0]
         for row in (
@@ -31,7 +35,11 @@ def snapshot_round_memberships(db: Session, round_id: int) -> int:
 
     users = (
         db.query(User)
-        .filter(User.is_admin == False, User.group_id.isnot(None))
+        .filter(
+            User.is_admin == False,
+            User.is_active == True,
+            User.group_id.isnot(None),
+        )
         .order_by(User.id)
         .all()
     )
@@ -77,7 +85,11 @@ def get_round_group_players(db: Session, group_id: int, round_id: int) -> List[U
 
     return (
         db.query(User)
-        .filter(User.group_id == group_id, User.is_admin == False)
+        .filter(
+            User.group_id == group_id,
+            User.is_admin == False,
+            User.is_active == True,
+        )
         .order_by(User.id)
         .all()
     )

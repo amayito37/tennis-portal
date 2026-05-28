@@ -49,6 +49,8 @@ def apply_promotions_for_round(
             user = db.query(User).get(row["player_id"])
             if not user:
                 continue
+            if not user.is_active:
+                continue
             from_gid = gid
             to_gid = from_gid + -delta
             # clamp

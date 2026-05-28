@@ -27,7 +27,7 @@ def list_groups(db: Session = Depends(get_db), _=Depends(get_current_user)):
     for g in groups:
         players = (
             db.query(User)
-            .filter(User.group_id == g.id)
+            .filter(User.group_id == g.id, User.is_admin == False, User.is_active == True)
             .all()
         )
         result.append({
@@ -58,7 +58,11 @@ def get_group(group_id: int, db: Session = Depends(get_db), _=Depends(get_curren
 
 @router.get("/{group_id}/players")
 def list_group_players(group_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
-    players = db.query(User).filter(User.group_id == group_id).all()
+    players = (
+        db.query(User)
+        .filter(User.group_id == group_id, User.is_admin == False, User.is_active == True)
+        .all()
+    )
     return [
         {
             "id": u.id,
@@ -102,7 +106,11 @@ def list_group_fixtures(group_id: int, db: Session = Depends(get_db), _=Depends(
     current_round = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
 
     # Get all players in the group
-    players = db.query(User).filter(User.group_id == group_id).all()
+    players = (
+        db.query(User)
+        .filter(User.group_id == group_id, User.is_admin == False, User.is_active == True)
+        .all()
+    )
     player_ids = [p.id for p in players]
 
     # Get all unplayed matches between those players
@@ -124,7 +132,7 @@ def list_group_fixtures(group_id: int, db: Session = Depends(get_db), _=Depends(
 def group_table(group_id: int, db: Session = Depends(get_db)):
     users = (
         db.query(User)
-        .filter(User.group_id == group_id, User.is_admin == False)
+        .filter(User.group_id == group_id, User.is_admin == False, User.is_active == True)
         .all()
     )
 

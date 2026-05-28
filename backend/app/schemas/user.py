@@ -1,5 +1,5 @@
 from pydantic import BaseModel, constr, ConfigDict
-from typing import Optional
+from typing import Literal, Optional
 
 class UserBase(BaseModel):
     email: str | None = None
@@ -12,6 +12,9 @@ class UserCreate(UserBase):
 class UserPublic(UserBase):
     id: int
     is_admin: bool
+    is_active: bool = True
+    pending_status: str | None = None
+    pending_after_round_id: int | None = None
     points: int
 
     group_id: int | None = None
@@ -23,3 +26,17 @@ class UserUpdate(BaseModel):
     points: Optional[int] = None
     group_id: Optional[int] = None
 
+
+class AdminPlayerCreate(BaseModel):
+    email: str
+    full_name: str
+    password: constr(min_length=6, max_length=72)
+    group_id: int
+    join_timing: Literal["NOW", "NEXT_ROUND"] = "NOW"
+
+
+class AdminPlayerUpdate(BaseModel):
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    points: Optional[int] = None
+    group_id: Optional[int] = None

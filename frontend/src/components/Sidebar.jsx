@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, Users, Trophy, Calendar, User, Medal, NotebookTabs } from "lucide-react";
+import { Calendar, Medal, Menu, NotebookTabs, Trophy, User, UserCog, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { apiGet } from "../services/api";
 
@@ -74,6 +74,22 @@ export default function Sidebar({ open, setOpen }) {
         <MobileNavItem to="/rankings" icon={Medal}>Ranking</MobileNavItem>
         <MobileNavItem to="/fixtures" icon={Calendar}>Partidos</MobileNavItem>
         <MobileNavItem to="/profile" icon={User}>Perfil</MobileNavItem>
+
+        {me?.is_admin && (
+          <NavLink
+            to="/admin/players"
+            onClick={closeOnMobile}
+            className={({ isActive }) =>
+              `flex items-center gap-3 p-2 rounded-md transition ${
+                isActive
+                  ? "bg-purple-100 text-purple-700 font-semibold"
+                  : "hover:bg-gray-100 text-purple-700"
+              }`
+            }
+          >
+            <UserCog size={18} /> Administrar Jugadores
+          </NavLink>
+        )}
 
         {me?.is_admin && (
           <NavLink

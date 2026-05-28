@@ -17,6 +17,7 @@ from app.services.round_memberships import (
     snapshot_round_memberships,
     update_round_membership_points_at_end,
 )
+from sqlalchemy import and_, or_
 
 router = APIRouter(tags=["rounds"])
 
@@ -63,10 +64,29 @@ def generate_fixtures(round_id: int, db: Session = Depends(get_db), current_user
     created = 0
 
     for g in groups:
-        players = get_round_group_players(db, g.id, round_id)
+        players = [p for p in get_round_group_players(db, g.id, round_id) if p.is_active]
         # simple round-robin once: every pair plays once
         for i in range(len(players)):
             for j in range(i+1, len(players)):
+                existing = (
+                    db.query(Match.id)
+                    .filter(
+                        Match.round_id == round_id,
+                        or_(
+                            and_(
+                                Match.player1_id == players[i].id,
+                                Match.player2_id == players[j].id,
+                            ),
+                            and_(
+                                Match.player1_id == players[j].id,
+                                Match.player2_id == players[i].id,
+                            ),
+                        ),
+                    )
+                    .first()
+                )
+                if existing:
+                    continue
                 m = Match(
                     player1_id=players[i].id,
                     player2_id=players[j].id,
@@ -92,7 +112,10 @@ def list_unplayed(round_id: int, db: Session = Depends(get_db), current_user: Us
     qs = (
         db.query(Match)
         .options(joinedload(Match.player1), joinedload(Match.player2))
-        .filter(Match.round_id == round_id, Match.status == MatchStatus.SCHEDULED)
+        .filter(
+            Match.round_id == round_id,
+            Match.status.in_([MatchStatus.SCHEDULED, MatchStatus.CANCELLED]),
+        )
         .all()
     )
     return [
@@ -100,7 +123,8 @@ def list_unplayed(round_id: int, db: Session = Depends(get_db), current_user: Us
             "id": m.id,
             "player1": {"id": m.player1.id, "full_name": m.player1.full_name},
             "player2": {"id": m.player2.id, "full_name": m.player2.full_name},
-            "scheduled_date": m.scheduled_date
+            "scheduled_date": m.scheduled_date,
+            "status": m.status.value if hasattr(m.status, "value") else m.status,
         } for m in qs
     ]
 

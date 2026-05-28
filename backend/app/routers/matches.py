@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from typing import List
+from pydantic import BaseModel
 from app.auth.security import get_current_user, get_db
 from app.models.match import Match, MatchStatus
 from app.models.match_result import MatchResult
@@ -11,6 +12,10 @@ from app.schemas.result import ResultCreate, SetScore
 from app.services.elo import calculate_elo_change, revert_elo_change
 
 router = APIRouter(tags=["matches"])
+
+
+class MatchStatusUpdate(BaseModel):
+    status: str
 
 # --- Helper: convert structured sets into readable score string ---
 def _format_score(sets: list[dict]) -> str:
@@ -61,12 +66,21 @@ def list_matches(db: Session = Depends(get_db), _=Depends(get_current_user)):
 @router.get("/fixtures", response_model=List[MatchPublic])
 def list_fixtures(db: Session = Depends(get_db), _=Depends(get_current_user)):
     current_round = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
+    active_player_ids = [
+        row[0]
+        for row in (
+            db.query(User.id)
+            .filter(User.is_admin == False, User.is_active == True)
+            .all()
+        )
+    ]
 
     fixtures = (
         db.query(Match)
         .options(joinedload(Match.player1), joinedload(Match.player2))
         .filter(Match.round == current_round)
         .filter(Match.status == MatchStatus.SCHEDULED)
+        .filter(Match.player1_id.in_(active_player_ids), Match.player2_id.in_(active_player_ids))
         .order_by(Match.scheduled_date.asc())
         .all()
     )
@@ -102,8 +116,11 @@ def create_match(payload: MatchCreate, db: Session = Depends(get_db), _=Depends(
 
     if not player1 or not player2:
         raise HTTPException(status_code=404, detail="Player not found")
+    if not player1.is_active or not player2.is_active:
+        raise HTTPException(status_code=400, detail="Players must be active.")
     if player1.group_id != player2.group_id:
         raise HTTPException(status_code=400, detail="Players must be in the same group.")
+    current_round = db.query(Round).filter(Round.status == RoundStatus.ACTIVE).first()
 
     match = Match(
         player1_id=payload.player1_id,
@@ -111,6 +128,7 @@ def create_match(payload: MatchCreate, db: Session = Depends(get_db), _=Depends(
         scheduled_date=payload.scheduled_date,
         status=MatchStatus.SCHEDULED,
         played=False,
+        round_id=current_round.id if current_round else None,
     )
     db.add(match)
     db.commit()
@@ -137,6 +155,8 @@ def update_match_result(
 
     if not current_user.is_admin and current_user.id not in (match.player1_id, match.player2_id):
         raise HTTPException(status_code=403, detail="Not allowed to report this match")
+    if match.status == MatchStatus.CANCELLED and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Only admins can report cancelled matches")
 
     if set([payload.winner_id, payload.loser_id]) != set([match.player1_id, match.player2_id]):
         raise HTTPException(status_code=400, detail="Winner/loser must be match participants")
@@ -157,6 +177,11 @@ def update_match_result(
     db.add(result)
 
     winner = db.query(User).filter(User.id == payload.winner_id).first()
+    loser = db.query(User).filter(User.id == payload.loser_id).first()
+    if not winner or not loser:
+        raise HTTPException(status_code=404, detail="Player not found")
+    if not current_user.is_admin and (not winner.is_active or not loser.is_active):
+        raise HTTPException(status_code=400, detail="Inactive players cannot report results")
 
     # Mark match as played/completed
     match.played = True
@@ -166,7 +191,6 @@ def update_match_result(
     match.score = _format_score(result.sets)
 
     # Apply ELO changes
-    loser = db.query(User).filter(User.id == payload.loser_id).first()
     d_win, d_lose = calculate_elo_change(winner.points, loser.points)
     winner.points += d_win
     loser.points += d_lose
@@ -212,13 +236,50 @@ def update_existing_result(
     # Update ELO
     winner = db.query(User).filter(User.id == payload.winner_id).first()
     loser = db.query(User).filter(User.id == payload.loser_id).first()
+    if not winner or not loser:
+        raise HTTPException(status_code=404, detail="Player not found")
     d_win, d_lose = calculate_elo_change(winner.points, loser.points)
     winner.points += d_win
     loser.points += d_lose
 
-    db.add_all([winner, loser, result])
+    match.winner = winner
+    match.status = MatchStatus.COMPLETED
+    match.played = True
+    match.score = _format_score(result.sets)
+
+    db.add_all([winner, loser, result, match])
     db.commit()
     db.refresh(match)
 
     return {"message": "Result updated successfully"}
 
+
+@router.patch("/{match_id}/status")
+def update_match_status(
+    match_id: int,
+    payload: MatchStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=404, detail="Match not found")
+    if match.played or match.result is not None:
+        raise HTTPException(status_code=400, detail="Cannot change status of a completed match")
+
+    try:
+        status = MatchStatus(payload.status)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid match status")
+
+    if status not in (MatchStatus.SCHEDULED, MatchStatus.CANCELLED):
+        raise HTTPException(status_code=400, detail="Only SCHEDULED and CANCELLED are allowed")
+
+    match.status = status
+    db.add(match)
+    db.commit()
+    db.refresh(match)
+    return {"message": "Match status updated", "status": match.status.value}

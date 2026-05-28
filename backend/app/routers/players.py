@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func, or_
+from sqlalchemy import func
 from typing import List
 from app.auth.security import get_current_user, get_db
 from app.schemas.user import UserPublic
@@ -16,7 +16,12 @@ def list_players(
     _=Depends(get_current_user)
 ):
     """Authenticated endpoint — returns all players ordered by points."""
-    players = db.query(User).filter(User.is_admin == False).order_by(User.points.desc()).all()
+    players = (
+        db.query(User)
+        .filter(User.is_admin == False, User.is_active == True)
+        .order_by(User.points.desc())
+        .all()
+    )
     return players
 
 
@@ -51,7 +56,12 @@ def get_ranking(db: Session = Depends(get_db)):
         match_count_map = {pid: cnt for pid, cnt in totals}
 
         # Final ranking
-        players = db.query(User).filter(User.is_admin == False).order_by(User.points.desc()).all()
+        players = (
+            db.query(User)
+            .filter(User.is_admin == False, User.is_active == True)
+            .order_by(User.points.desc())
+            .all()
+        )
 
         return [
             {
@@ -78,9 +88,6 @@ def get_player(
 ):
     """Authenticated endpoint — get specific player details."""
     return db.query(User).filter(User.id == player_id).first()
-
-from app.schemas.user import UserUpdate  # new schema
-from app.models.user import User
 
 @router.patch("/{user_id}")
 def update_user_by_admin(

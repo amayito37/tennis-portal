@@ -16,6 +16,7 @@ import AdminRounds from "./pages/AdminRounds";
 // NEW
 import AdminRoute from "./components/AdminRoute";
 import AdminGroupRound from "./pages/AdminGroupRound";
+import AdminPlayers from "./pages/AdminPlayers";
 
 export default function App() {
   const [token, setToken] = useState(getToken());
@@ -77,6 +78,15 @@ export default function App() {
                 element={
                   <AdminRoute>
                     <AdminGroupRound />
+                  </AdminRoute>
+                }
+              />
+
+              <Route
+                path="/admin/players"
+                element={
+                  <AdminRoute>
+                    <AdminPlayers />
                   </AdminRoute>
                 }
               />

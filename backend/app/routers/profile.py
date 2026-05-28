@@ -12,6 +12,7 @@ class UserMeResponse(BaseModel):
     full_name: str
     points: int
     is_admin: bool
+    is_active: bool
     group_id: int | None = None
     group_name: str | None = None
 
@@ -33,6 +34,7 @@ def get_profile(db: Session = Depends(get_db), current_user: User = Depends(get_
         "full_name": current_user.full_name,
         "points": current_user.points,
         "is_admin": current_user.is_admin,
+        "is_active": current_user.is_active,
         "group_id": current_user.group_id,
         "group_name": group_name,
     }
