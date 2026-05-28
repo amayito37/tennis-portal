@@ -21,7 +21,7 @@ router = APIRouter(tags=["groups"])
 
 @router.get("/", response_model=List[Dict[str, Any]])
 def list_groups(db: Session = Depends(get_db), _=Depends(get_current_user)):
-    groups = db.query(Group).all()
+    groups = db.query(Group).order_by(Group.id).all()
     result = []
 
     for g in groups:

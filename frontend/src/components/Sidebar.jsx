@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, Medal, Menu, NotebookTabs, Trophy, User, UserCog, Users } from "lucide-react";
+import { Calendar, History, Medal, Menu, NotebookTabs, Trophy, User, UserCog, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { apiGet } from "../services/api";
 
@@ -119,7 +119,7 @@ export default function Sidebar({ open, setOpen }) {
               }`
             }
           >
-            <NotebookTabs size={18} /> Ver rondas anteriores
+            <History size={18} /> Ver rondas anteriores
           </NavLink>
         )}
       </nav>

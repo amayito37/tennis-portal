@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import api, { apiGet } from "../services/api";
 import GroupRoundView from "../components/GroupRoundView";
 import Header from "../components/Header";
+import { compareGroups } from "../util/groupSort";
 
 const MONTHS = [
   "Ene",
@@ -68,10 +69,12 @@ export default function AdminGroupRounds() {
         // Rounds: admin-only (your rounds.py enforces admin)
         const rs = (await api.get("/rounds")).data;
 
-        const normalizedGroups = (gs || []).map((g) => ({
-          id: g.id,
-          name: g.name,
-        }));
+        const normalizedGroups = (gs || [])
+          .map((g) => ({
+            id: g.id,
+            name: g.name,
+          }))
+          .sort(compareGroups);
 
         setGroups(normalizedGroups);
         setRounds(rs);

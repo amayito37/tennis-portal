@@ -70,6 +70,30 @@ export default function ReportResultModal({
       prev.map((s, idx) => (idx === i ? { ...s, [key]: val } : s))
     );
 
+  const handleWinnerChange = (nextWinnerId) => {
+    if (!nextWinnerId) {
+      setWinnerId(null);
+      return;
+    }
+
+    const currentWinnerIsP1 = winnerId ? winnerId === match.player1.id : true;
+    const nextWinnerIsP1 = nextWinnerId === match.player1.id;
+
+    if (currentWinnerIsP1 !== nextWinnerIsP1) {
+      setSets((prev) =>
+        prev.map((s) => ({
+          ...s,
+          p1_games: s.p2_games,
+          p2_games: s.p1_games,
+          p1_tiebreak: s.p2_tiebreak,
+          p2_tiebreak: s.p1_tiebreak,
+        }))
+      );
+    }
+
+    setWinnerId(nextWinnerId);
+  };
+
   // ----------------------------
   // Submit (send always in backend perspective: p1 = player1, p2 = player2)
   // ----------------------------
@@ -186,7 +210,7 @@ export default function ReportResultModal({
         </label>
         <select
           value={winnerId || ""}
-          onChange={(e) => setWinnerId(Number(e.target.value))}
+          onChange={(e) => handleWinnerChange(Number(e.target.value) || null)}
           className="w-full border rounded p-2 mb-4"
         >
           <option value="">Seleccionar ganador</option>

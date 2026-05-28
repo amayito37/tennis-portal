@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import { apiGet } from "../services/api";
 import { Link } from "react-router-dom";
+import { compareGroups } from "../util/groupSort";
 
 export default function Groups() {
   const [groups, setGroups] = useState([]);
@@ -23,7 +24,7 @@ export default function Groups() {
   const ordered = [...groups].sort((a, b) => {
     if (a.id === myGroupId) return -1;
     if (b.id === myGroupId) return 1;
-    return a.name.localeCompare(b.name);
+    return compareGroups(a, b);
   });
 
   return (
